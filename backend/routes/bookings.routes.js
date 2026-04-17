@@ -32,15 +32,51 @@ function generateTimeSlots(start = "09:00", end = "18:00", step = 30) {
 router.get("/availability/:salonId", async (req, res) => {
   try {
     const salonId = Number(req.params.salonId);
-    const { date } = req.query;
+    const { date, specialistId } = req.query;
 
     if (!date) {
       return res.status(400).json({ message: "Дата обязательна" });
     }
 
+    if (!specialistId) {
+      return res.status(400).json({ message: "specialistId обязателен" });
+    }
+
+    const specialist = await prisma.specialist.findUnique({
+      where: { id: Number(specialistId) },
+    });
+
+    if (!specialist) {
+      return res.status(404).json({ message: "Мастер не найден" });
+    }
+
+    const jsDay = new Date(date).getDay(); // 0=Sunday, 1=Monday...
+    const normalizedDay = jsDay === 0 ? 7 : jsDay; // Monday=1 ... Sunday=7
+
+    const allowedDays = (specialist.workDays || "1,2,3,4,5,6")
+      .split(",")
+      .map((item) => Number(item.trim()))
+      .filter(Boolean);
+
+    if (!allowedDays.includes(normalizedDay)) {
+      return res.json({
+        date,
+        salonId,
+        specialistId: Number(specialistId),
+        allSlots: [],
+        busySlots: [],
+        availableSlots: [],
+        message: "Мастер не работает в этот день",
+      });
+    }
+
+    const workStartTime = specialist.workStartTime || "09:00";
+    const workEndTime = specialist.workEndTime || "18:00";
+
     const bookings = await prisma.booking.findMany({
       where: {
         salonId,
+        specialistId: Number(specialistId),
         bookingDate: date,
         status: {
           not: "CANCELLED",
@@ -51,8 +87,7 @@ router.get("/availability/:salonId", async (req, res) => {
       },
     });
 
-    const allSlots = generateTimeSlots("09:00", "18:00", 30);
-
+    const allSlots = generateTimeSlots(workStartTime, workEndTime, 30);
     const busySlots = new Set();
 
     for (const booking of bookings) {
@@ -71,6 +106,10 @@ router.get("/availability/:salonId", async (req, res) => {
     res.json({
       date,
       salonId,
+      specialistId: Number(specialistId),
+      workStartTime,
+      workEndTime,
+      workDays: allowedDays,
       allSlots,
       busySlots: Array.from(busySlots),
       availableSlots,
@@ -83,7 +122,7 @@ router.get("/availability/:salonId", async (req, res) => {
 
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { salonId, serviceId, bookingDate, bookingTime, notes } = req.body;
+    const { salonId, specialistId, serviceId, bookingDate, bookingTime, notes } = req.body;
 
     if (req.user.role !== "CLIENT") {
       return res.status(403).json({ message: "Только клиент может создавать запись" });
@@ -96,6 +135,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const existingBookings = await prisma.booking.findMany({
   where: {
     salonId: Number(salonId),
+    specialistId: specialistId ? Number(specialistId) : null,
     bookingDate,
     status: {
       not: "CANCELLED",
@@ -131,6 +171,7 @@ for (const existingBooking of existingBookings) {
         clientId: req.user.id,
         salonId: Number(salonId),
         serviceId: Number(serviceId),
+        specialistId: specialistId ? Number(specialistId) : null,
         bookingDate,
         bookingTime,
         notes: notes || "",
@@ -139,6 +180,7 @@ for (const existingBooking of existingBookings) {
       include: {
         service: true,
         salon: true,
+        specialist: true,
       },
     });
 
@@ -161,6 +203,7 @@ router.get("/my", authMiddleware, async (req, res) => {
       include: {
         salon: true,
         service: true,
+        specialist: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -204,6 +247,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
       include: {
         salon: true,
         service: true,
+        specialist: true,
       },
     });
 

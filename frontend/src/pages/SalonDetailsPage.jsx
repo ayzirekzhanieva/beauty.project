@@ -18,10 +18,13 @@ import StarRating from "../components/StarRating";
 import { getUser, isAuthenticated } from "../services/auth";
 import { FALLBACK_SALON_IMAGE, getImageUrl } from "../services/constants";
 import { UserRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 
 export default function SalonDetailsPage() {
   const { id } = useParams();
   const user = getUser();
+  const navigate = useNavigate();
 
   const [salon, setSalon] = useState(null);
   const [reviewsData, setReviewsData] = useState({
@@ -34,6 +37,8 @@ export default function SalonDetailsPage() {
     rating: 5,
     comment: "",
   });
+
+  const [selectedSpecialistId, setSelectedSpecialistId] = useState("");
 
   useEffect(() => {
     loadSalon();
@@ -128,7 +133,7 @@ export default function SalonDetailsPage() {
           className="inline-flex items-center gap-2 text-pink-500 font-medium mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          На главную
+          Назад
         </Link>
 
         <Card className="overflow-hidden p-0 mb-8">
@@ -168,6 +173,27 @@ export default function SalonDetailsPage() {
             </Link>
           </div>
         </Card>
+
+        <div className="mb-6">
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Выберите мастера
+  </label>
+
+  <select
+    value={selectedSpecialistId}
+    onChange={(e) => setSelectedSpecialistId(e.target.value)}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+    required
+  >
+    <option value="">Выберите мастера</option>
+
+    {salon.specialists.map((specialist) => (
+      <option key={specialist.id} value={specialist.id}>
+        {specialist.fullName} — {specialist.title}
+      </option>
+    ))}
+  </select>
+</div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
@@ -290,6 +316,36 @@ export default function SalonDetailsPage() {
               {specialist.bio || "Описание скоро появится"}
             </p>
           </div>
+          <Button
+  onClick={() =>
+    navigate(`/booking/${salon.id}?specialistId=${specialist.id}`)
+  }
+  className="w-full mt-4"
+>
+  Записаться к мастеру
+</Button>
+          {specialist.works?.length > 0 && (
+  <div className="mt-4">
+    <p className="font-medium mb-2">Портфолио</p>
+    <div className="grid grid-cols-2 gap-2">
+      {specialist.works.map((work) => (
+        <div key={work.id}>
+          <img
+            src={getImageUrl(work.imageUrl)}
+            alt={work.caption || "Portfolio work"}
+            className="w-full h-28 object-cover rounded-xl"
+            onError={(e) => {
+              e.currentTarget.src = FALLBACK_SALON_IMAGE;
+            }}
+          />
+          {work.caption && (
+            <p className="text-xs text-gray-500 mt-1">{work.caption}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
         </div>
       ))}
     </div>

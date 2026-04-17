@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import api from "../services/api";
 import Card from "../components/Card";
 import Button from "../components/Button";
-import BackToHome from "../components/BackToHome";
+import BackButton from "../components/BackButton";
 import { getUser } from "../services/auth";
 
 export default function OwnerDashboardPage() {
@@ -80,6 +80,9 @@ export default function OwnerDashboardPage() {
   title: "",
   bio: "",
   photo: null,
+  workStartTime: "09:00",
+  workEndTime: "18:00",
+  workDays: "1,2,3,4,5,6",
 });
 
 const [editingSpecialistId, setEditingSpecialistId] = useState(null);
@@ -89,6 +92,20 @@ const [editSpecialistForm, setEditSpecialistForm] = useState({
   title: "",
   bio: "",
   photo: null,
+  workStartTime: "09:00",
+  workEndTime: "18:00",
+  workDays: "1,2,3,4,5,6",
+});
+
+const [formWork, setFormWork] = useState({
+  specialistId: "",
+  caption: "",
+  image: null,
+});
+
+const [formSpecialistService, setFormSpecialistService] = useState({
+  specialistId: "",
+  serviceId: "",
 });
 
   useEffect(() => {
@@ -396,6 +413,9 @@ async function createSpecialist(e) {
     formData.append("fullName", formSpecialist.fullName);
     formData.append("title", formSpecialist.title);
     formData.append("bio", formSpecialist.bio);
+    formData.append("workStartTime", formSpecialist.workStartTime);
+    formData.append("workEndTime", formSpecialist.workEndTime);
+    formData.append("workDays", formSpecialist.workDays);
 
     if (formSpecialist.photo) {
       formData.append("photo", formSpecialist.photo);
@@ -421,6 +441,50 @@ async function createSpecialist(e) {
   }
 }
 
+function handleWorkChange(e) {
+  setFormWork({ ...formWork, [e.target.name]: e.target.value });
+}
+
+async function createSpecialistWork(e) {
+  e.preventDefault();
+
+  try {
+    const formData = new FormData();
+    formData.append("specialistId", formWork.specialistId);
+    formData.append("caption", formWork.caption);
+
+    if (formWork.image) {
+      formData.append("image", formWork.image);
+    }
+
+    await api.post("/owner/specialist-works", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.success("Работа мастера добавлена");
+    setFormWork({
+      specialistId: "",
+      caption: "",
+      image: null,
+    });
+    loadOwnerSalons();
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка добавления работы");
+  }
+}
+
+async function deleteSpecialistWork(workId) {
+  try {
+    await api.delete(`/owner/specialist-works/${workId}`);
+    toast.success("Работа удалена");
+    loadOwnerSalons();
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка удаления работы");
+  }
+}
+
 function startEditSpecialist(specialist) {
   setEditingSpecialistId(specialist.id);
   setEditSpecialistForm({
@@ -428,6 +492,9 @@ function startEditSpecialist(specialist) {
     title: specialist.title || "",
     bio: specialist.bio || "",
     photo: null,
+    workStartTime: specialist.workStartTime || "09:00",
+    workEndTime: specialist.workEndTime || "18:00",
+    workDays: specialist.workDays || "1,2,3,4,5,6",
   });
 }
 
@@ -437,6 +504,9 @@ async function saveSpecialistEdit(specialistId) {
     formData.append("fullName", editSpecialistForm.fullName);
     formData.append("title", editSpecialistForm.title);
     formData.append("bio", editSpecialistForm.bio);
+    formData.append("workStartTime", editSpecialistForm.workStartTime);
+    formData.append("workEndTime", editSpecialistForm.workEndTime);
+    formData.append("workDays", editSpecialistForm.workDays);
 
     if (editSpecialistForm.photo) {
       formData.append("photo", editSpecialistForm.photo);
@@ -456,10 +526,98 @@ async function saveSpecialistEdit(specialistId) {
   }
 }
 
+function handleSpecialistServiceChange(e) {
+  setFormSpecialistService({
+    ...formSpecialistService,
+    [e.target.name]: e.target.value,
+  });
+}
+
+async function createSpecialistService(e) {
+  e.preventDefault();
+
+  try {
+    await api.post("/owner/specialist-services", {
+      specialistId: Number(formSpecialistService.specialistId),
+      serviceId: Number(formSpecialistService.serviceId),
+    });
+
+    toast.success("Услуга привязана к мастеру");
+    setFormSpecialistService({
+      specialistId: "",
+      serviceId: "",
+    });
+    loadOwnerSalons();
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка привязки услуги");
+  }
+}
+
+async function deleteSpecialistService(id) {
+  try {
+    await api.delete(`/owner/specialist-services/${id}`);
+    toast.success("Услуга отвязана");
+    loadOwnerSalons();
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка удаления связи");
+  }
+}
+
+function toggleWorkDay(day) {
+  const currentDays = (formSpecialist.workDays || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const updatedDays = currentDays.includes(String(day))
+    ? currentDays.filter((item) => item !== String(day))
+    : [...currentDays, String(day)];
+
+  setFormSpecialist({
+    ...formSpecialist,
+    workDays: updatedDays.sort((a, b) => Number(a) - Number(b)).join(","),
+  });
+}
+
+function toggleEditWorkDay(day) {
+  const currentDays = (editSpecialistForm.workDays || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const updatedDays = currentDays.includes(String(day))
+    ? currentDays.filter((item) => item !== String(day))
+    : [...currentDays, String(day)];
+
+  setEditSpecialistForm({
+    ...editSpecialistForm,
+    workDays: updatedDays.sort((a, b) => Number(a) - Number(b)).join(","),
+  });
+}
+
+const weekDays = [
+  { value: 1, label: "Пн" },
+  { value: 2, label: "Вт" },
+  { value: 3, label: "Ср" },
+  { value: 4, label: "Чт" },
+  { value: 5, label: "Пт" },
+  { value: 6, label: "Сб" },
+  { value: 7, label: "Вс" },
+];
+
+const timeOptions = [];
+for (let hour = 0; hour < 24; hour++) {
+  for (let minute = 0; minute < 60; minute += 30) {
+    const hh = String(hour).padStart(2, "0");
+    const mm = String(minute).padStart(2, "0");
+    timeOptions.push(`${hh}:${mm}`);
+  }
+}
+
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <BackToHome />
+        <BackButton />
         <h1 className="text-4xl font-bold mb-4">Кабинет владельца</h1>
 
 <OwnerTabs
@@ -755,14 +913,14 @@ async function saveSpecialistEdit(specialistId) {
 
         <div className="flex gap-2 mb-5">
           <Button onClick={() => startEditSalon(salon)}>
-            Edit Salon
+            Изменить Салон
           </Button>
 
           <Button
             className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
             onClick={() => openDeleteModal("salon", salon.id)}
           >
-            Delete Salon
+            Удалить Салон
           </Button>
         </div>
       </>
@@ -879,13 +1037,13 @@ async function saveSpecialistEdit(specialistId) {
 
             <div className="flex gap-2 mt-3">
               <Button onClick={() => startEditService(service)}>
-                Edit
+                Изменить
               </Button>
               <Button
                 className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
                 onClick={() => openDeleteModal("service", service.id)}
               >
-                Delete
+                Удалить
               </Button>
             </div>
           </>
@@ -1006,13 +1164,13 @@ async function saveSpecialistEdit(specialistId) {
 
             <div className="flex gap-2 mt-3">
               <Button onClick={() => startEditProduct(product)}>
-                Edit
+                Изменить
               </Button>
               <Button
                 className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
                 onClick={() => openDeleteModal("product", product.id)}
               >
-                Delete
+                Удалить
               </Button>
             </div>
           </>
@@ -1035,134 +1193,264 @@ async function saveSpecialistEdit(specialistId) {
     ) : (
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {salon.specialists.map((specialist) => (
-          <div
-            key={specialist.id}
-            className="border border-pink-100 rounded-2xl p-4 bg-white"
+  <div
+    key={specialist.id}
+    className="border border-pink-100 rounded-2xl p-4 bg-white"
+  >
+    {editingSpecialistId === specialist.id ? (
+      <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Имя мастера
+          </label>
+          <input
+            type="text"
+            value={editSpecialistForm.fullName}
+            onChange={(e) =>
+              setEditSpecialistForm({
+                ...editSpecialistForm,
+                fullName: e.target.value,
+              })
+            }
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+            placeholder="Имя мастера"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Специализация
+          </label>
+          <input
+            type="text"
+            value={editSpecialistForm.title}
+            onChange={(e) =>
+              setEditSpecialistForm({
+                ...editSpecialistForm,
+                title: e.target.value,
+              })
+            }
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+            placeholder="Специализация"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Описание
+          </label>
+          <textarea
+            value={editSpecialistForm.bio}
+            onChange={(e) =>
+              setEditSpecialistForm({
+                ...editSpecialistForm,
+                bio: e.target.value,
+              })
+            }
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+            rows="3"
+            placeholder="Описание"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Новое фото
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setEditSpecialistForm({
+                ...editSpecialistForm,
+                photo: e.target.files?.[0] || null,
+              })
+            }
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={() => saveSpecialistEdit(specialist.id)}>
+            Сохранить
+          </Button>
+          <Button
+            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            onClick={() => setEditingSpecialistId(null)}
           >
-            {editingSpecialistId === specialist.id ? (
-              <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Имя мастера
-                  </label>
-                  <input
-                    type="text"
-                    value={editSpecialistForm.fullName}
-                    onChange={(e) =>
-                      setEditSpecialistForm({
-                        ...editSpecialistForm,
-                        fullName: e.target.value,
-                      })
-                    }
-                    placeholder="Например: Алина"
-                    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                  />
-                </div>
+            Отмена
+          </Button>
+        </div>
+        <div>
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Начало рабочего дня
+  </label>
+  <select
+  value={editSpecialistForm.workStartTime}
+  onChange={(e) =>
+    setEditSpecialistForm({
+      ...editSpecialistForm,
+      workStartTime: e.target.value,
+    })
+  }
+  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+>
+  {timeOptions.map((time) => (
+    <option key={time} value={time}>
+      {time}
+    </option>
+  ))}
+</select>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Специализация
-                  </label>
-                  <input
-                    type="text"
-                    value={editSpecialistForm.title}
-                    onChange={(e) =>
-                      setEditSpecialistForm({
-                        ...editSpecialistForm,
-                        title: e.target.value,
-                      })
-                    }
-                    placeholder="Например: Бровист"
-                    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                  />
-                </div>
+<select
+  value={editSpecialistForm.workEndTime}
+  onChange={(e) =>
+    setEditSpecialistForm({
+      ...editSpecialistForm,
+      workEndTime: e.target.value,
+    })
+  }
+  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+>
+  {timeOptions.map((time) => (
+    <option key={time} value={time}>
+      {time}
+    </option>
+  ))}
+</select>
+</div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Описание
-                  </label>
-                  <textarea
-                    value={editSpecialistForm.bio}
-                    onChange={(e) =>
-                      setEditSpecialistForm({
-                        ...editSpecialistForm,
-                        bio: e.target.value,
-                      })
-                    }
-                    placeholder="Расскажите о мастере"
-                    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                    rows="3"
-                  />
-                </div>
+<div>
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Конец рабочего дня
+  </label>
+  <input
+    type="time"
+    value={editSpecialistForm.workEndTime}
+    onChange={(e) =>
+      setEditSpecialistForm({
+        ...editSpecialistForm,
+        workEndTime: e.target.value,
+      })
+    }
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  />
+</div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Новое фото
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setEditSpecialistForm({
-                        ...editSpecialistForm,
-                        photo: e.target.files?.[0] || null,
-                      })
-                    }
-                    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                  />
-                </div>
+<div>
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Рабочие дни
+  </label>
 
-                <div className="flex gap-2">
-                  <Button onClick={() => saveSpecialistEdit(specialist.id)}>
-                    Сохранить
-                  </Button>
-                  <Button
-                    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-                    onClick={() => setEditingSpecialistId(null)}
-                  >
-                    Отмена
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {specialist.photoUrl && (
+  <div className="flex flex-wrap gap-2">
+    {weekDays.map((day) => {
+      const selectedDays = (editSpecialistForm.workDays || "").split(",");
+      const isSelected = selectedDays.includes(String(day.value));
+
+      return (
+        <button
+          key={day.value}
+          type="button"
+          onClick={() => toggleEditWorkDay(day.value)}
+          className={`px-4 py-2 rounded-2xl border transition ${
+            isSelected
+              ? "bg-pink-500 text-white border-pink-500"
+              : "bg-white text-gray-600 border-pink-200 hover:bg-pink-50"
+          }`}
+        >
+          {day.label}
+        </button>
+      );
+    })}
+  </div>
+</div>
+      </div>
+    ) : (
+      <>
+        {specialist.photoUrl && (
+          <img
+            src={`http://localhost:5000${specialist.photoUrl}`}
+            alt={specialist.fullName}
+            className="w-full h-48 object-cover rounded-2xl mb-4"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        )}
+
+        <p className="font-semibold text-lg">{specialist.fullName}</p>
+        <p className="text-pink-500">
+          {specialist.title || "Специалист"}
+        </p>
+        <p className="text-gray-600 mt-2">
+          {specialist.bio || "Без описания"}
+        </p>
+
+        {specialist.specialistServices?.length > 0 && (
+  <div className="mt-4">
+    <p className="font-medium mb-2">Услуги мастера</p>
+    <div className="flex flex-wrap gap-2">
+      {specialist.specialistServices.map((item) => (
+        <div
+          key={item.id}
+          className="inline-flex items-center gap-2 bg-pink-50 border border-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm"
+        >
+          <span>{item.service.name}</span>
+          <button
+            type="button"
+            onClick={() => deleteSpecialistService(item.id)}
+            className="text-pink-500 font-semibold"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+        {specialist.works?.length > 0 && (
+          <div className="mt-4">
+            <p className="font-medium mb-2">Работы</p>
+            <div className="grid grid-cols-2 gap-2">
+              {specialist.works.map((work) => (
+                <div key={work.id} className="relative">
                   <img
-  src={`http://localhost:5000${specialist.photoUrl}`}
-  alt={specialist.fullName}
-  className="w-full h-48 object-cover rounded-2xl mb-4"
-  onError={(e) => {
-    e.currentTarget.style.display = "none";
-  }}
-/>
-                )}
-
-                <p className="font-semibold text-lg">{specialist.fullName}</p>
-
-                <p className="text-pink-500">
-                  {specialist.title || "Специалист"}
-                </p>
-
-                <p className="text-gray-600 mt-2">
-                  {specialist.bio || "Без описания"}
-                </p>
-
-                <div className="flex gap-2 mt-4">
-                  <Button onClick={() => startEditSpecialist(specialist)}>
-                    Edit
-                  </Button>
-
-                  <Button
-                    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-                    onClick={() => openDeleteModal("specialist", specialist.id)}
+                    src={`http://localhost:5000${work.imageUrl}`}
+                    alt={work.caption || "Work"}
+                    className="w-full h-24 object-cover rounded-xl"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => deleteSpecialistWork(work.id)}
+                    className="absolute top-1 right-1 bg-white/90 text-pink-500 text-xs px-2 py-1 rounded-lg border border-pink-200"
                   >
-                    Delete
-                  </Button>
+                    Удалить
+                  </button>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
-        ))}
+
+          
+        )}
+
+        <div className="flex gap-2 mt-4">
+          <Button onClick={() => startEditSpecialist(specialist)}>
+            Изменить
+          </Button>
+
+          <Button
+            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            onClick={() => openDeleteModal("specialist", specialist.id)}
+          >
+            Удалить
+          </Button>
+        </div>
+      </>
+    )}
+  </div>
+))}
       </div>
     )}
   </div>
@@ -1185,6 +1473,103 @@ async function saveSpecialistEdit(specialistId) {
         {activeTab === "specialists" && (
 <Card className="mb-8">
   <h2 className="text-2xl font-semibold mb-4">Добавить мастера</h2>
+
+  {activeTab === "specialists" && (
+  <Card className="mb-8">
+    <h2 className="text-2xl font-semibold mb-4">Добавить работу мастера</h2>
+
+    {activeTab === "specialists" && (
+  <Card className="mb-8">
+    <h2 className="text-2xl font-semibold mb-4">Привязать услугу к мастеру</h2>
+
+    <form onSubmit={createSpecialistService} className="grid md:grid-cols-2 gap-4">
+      <select
+        name="specialistId"
+        value={formSpecialistService.specialistId}
+        onChange={handleSpecialistServiceChange}
+        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        required
+      >
+        <option value="">Выберите мастера</option>
+        {ownerSalons.flatMap((salon) =>
+          salon.specialists.map((specialist) => (
+            <option key={specialist.id} value={specialist.id}>
+              {specialist.fullName} — {salon.name}
+            </option>
+          ))
+        )}
+      </select>
+
+      <select
+        name="serviceId"
+        value={formSpecialistService.serviceId}
+        onChange={handleSpecialistServiceChange}
+        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        required
+      >
+        <option value="">Выберите услугу</option>
+        {ownerSalons.flatMap((salon) =>
+          salon.services.map((service) => (
+            <option key={service.id} value={service.id}>
+              {service.name} — {salon.name}
+            </option>
+          ))
+        )}
+      </select>
+
+      <div className="md:col-span-2">
+        <Button type="submit">Привязать услугу</Button>
+      </div>
+    </form>
+  </Card>
+)}
+
+    <form onSubmit={createSpecialistWork} className="grid md:grid-cols-2 gap-4">
+      <select
+        name="specialistId"
+        value={formWork.specialistId}
+        onChange={handleWorkChange}
+        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        required
+      >
+        <option value="">Выберите мастера</option>
+        {ownerSalons.flatMap((salon) =>
+          salon.specialists.map((specialist) => (
+            <option key={specialist.id} value={specialist.id}>
+              {specialist.fullName} — {salon.name}
+            </option>
+          ))
+        )}
+      </select>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) =>
+          setFormWork({
+            ...formWork,
+            image: e.target.files?.[0] || null,
+          })
+        }
+        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        required
+      />
+
+      <textarea
+        name="caption"
+        placeholder="Подпись к работе"
+        value={formWork.caption}
+        onChange={handleWorkChange}
+        className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        rows="3"
+      />
+
+      <div className="md:col-span-2">
+        <Button type="submit">Добавить работу</Button>
+      </div>
+    </form>
+  </Card>
+)}
 
   <form onSubmit={createSpecialist} className="grid md:grid-cols-2 gap-4">
     <select
@@ -1234,17 +1619,72 @@ async function saveSpecialistEdit(specialistId) {
     />
 
     <textarea
-      name="bio"
-      placeholder="Описание мастера"
-      value={formSpecialist.bio}
-      onChange={handleSpecialistChange}
-      className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-      rows="4"
-    />
+  name="bio"
+  placeholder="Описание мастера"
+  value={formSpecialist.bio}
+  onChange={handleSpecialistChange}
+  className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  rows="4"
+/>
 
-    <div className="md:col-span-2">
-      <Button type="submit">Добавить мастера</Button>
-    </div>
+<select
+  name="workStartTime"
+  value={formSpecialist.workStartTime}
+  onChange={handleSpecialistChange}
+  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+>
+  {timeOptions.map((time) => (
+    <option key={time} value={time}>
+      {time}
+    </option>
+  ))}
+</select>
+
+<select
+  name="workEndTime"
+  value={formSpecialist.workEndTime}
+  onChange={handleSpecialistChange}
+  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+>
+  {timeOptions.map((time) => (
+    <option key={time} value={time}>
+      {time}
+    </option>
+  ))}
+</select>
+
+<div className="md:col-span-2">
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Рабочие дни
+  </label>
+
+  <div className="flex flex-wrap gap-2">
+    {weekDays.map((day) => {
+      const selectedDays = (formSpecialist.workDays || "").split(",");
+
+      const isSelected = selectedDays.includes(String(day.value));
+
+      return (
+        <button
+          key={day.value}
+          type="button"
+          onClick={() => toggleWorkDay(day.value)}
+          className={`px-4 py-2 rounded-2xl border transition ${
+            isSelected
+              ? "bg-pink-500 text-white border-pink-500"
+              : "bg-white text-gray-600 border-pink-200 hover:bg-pink-50"
+          }`}
+        >
+          {day.label}
+        </button>
+      );
+    })}
+  </div>
+</div>
+
+<div className="md:col-span-2">
+  <Button type="submit">Добавить мастера</Button>
+</div>
   </form>
 </Card> 
         )}
@@ -1345,12 +1785,23 @@ async function saveSpecialistEdit(specialistId) {
             <p className="font-semibold text-lg">{booking.salon.name}</p>
             <p className="text-gray-600">Клиент: {booking.client.fullName}</p>
             <p className="text-gray-600">Услуга: {booking.service.name}</p>
+            <p className="text-gray-600">Мастер: {booking.specialist?.fullName || "Не выбран"}</p>
             <p className="text-gray-600">Дата: {booking.bookingDate}</p>
             <p className="text-gray-600">Время: {booking.bookingTime}</p>
             <p className="text-gray-600">Стоимость: {booking.totalPrice} сом</p>
             <p className="text-gray-600 mt-1">
               Статус:{" "}
-              <span className="font-medium text-pink-500">{booking.status}</span>
+              <span className="font-medium text-pink-500">
+                {booking.status === "PENDING"
+                ? "Ожидает"
+                : booking.status === "CONFIRMED"
+                ? "Подтверждено"
+                : booking.status === "COMPLETED"
+                ? "Завершено"
+                : booking.status === "CANCELLED"
+                ? "Отменено"
+                : booking.status}
+              </span>
             </p>
           </div>
 
@@ -1360,21 +1811,21 @@ async function saveSpecialistEdit(specialistId) {
                 onClick={() => onUpdateStatus(booking.id, "CONFIRMED")}
                 className="px-4 py-2 rounded-2xl bg-pink-500 text-white hover:bg-pink-600 transition shadow-sm"
               >
-                Confirm
+                Подтверждено
               </button>
 
               <button
                 onClick={() => onUpdateStatus(booking.id, "COMPLETED")}
                 className="px-4 py-2 rounded-2xl bg-white text-pink-500 border border-pink-300 hover:bg-pink-50 transition"
               >
-                Complete
+                Завершено
               </button>
 
               <button
                 onClick={() => onUpdateStatus(booking.id, "CANCELLED")}
                 className="px-4 py-2 rounded-2xl bg-white text-pink-500 border border-pink-300 hover:bg-pink-50 transition"
               >
-                Cancel
+                Отмена
               </button>
             </div>
           )}
@@ -1418,10 +1869,10 @@ async function saveSpecialistEdit(specialistId) {
             className="p-3 rounded-2xl border border-pink-200 outline-none bg-white"
           >
             <option value="ALL">Все</option>
-            <option value="PENDING">PENDING</option>
-            <option value="CONFIRMED">CONFIRMED</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELLED">CANCELLED</option>
+            <option value="PENDING">Ожидает</option>
+            <option value="CONFIRMED">Подтверждено</option>
+            <option value="COMPLETED">Завершено</option>
+            <option value="CANCELLED">Отменено</option>
           </select>
         </div>
       </div>

@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import api from "../services/api";
 import Card from "../components/Card";
 import Button from "../components/Button";
-import BackToHome from "../components/BackToHome";
+import BackButton from "../components/BackButton";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-md mx-auto">
-        <BackToHome />
+        <BackButton />
         <Card>
           <h1 className="text-3xl font-bold mb-6 text-center">
             Забыли пароль?

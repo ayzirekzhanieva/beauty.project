@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
 import StarRating from "../components/StarRating";
-import BackToHome from "../components/BackToHome";
+import BackButton from "../components/BackButton";
 import { FALLBACK_SALON_IMAGE, getImageUrl } from "../services/constants";
 
 export default function FavoritesPage() {
@@ -53,7 +53,7 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-6xl mx-auto">
-        <BackToHome />
+        <BackButton />
         <h1 className="text-4xl font-bold mb-8">Избранные салоны</h1>
 
         {validFavorites.length === 0 ? (

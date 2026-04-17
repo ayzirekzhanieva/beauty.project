@@ -5,7 +5,7 @@ import api from "../services/api";
 import { saveAuth } from "../services/auth";
 import Card from "../components/Card";
 import Button from "../components/Button";
-import BackToHome from "../components/BackToHome";
+import BackButton from "../components/BackButton";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -40,8 +40,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-pink-50 p-6">
+      <div className="mb-10 text-center">
+  <h1 className="text-4xl font-bold text-pink-500">
+    Glow Find
+  </h1>
+  <p className="mt-2 text-gray-500">
+    Найди своего мастера красоты
+  </p>
+</div>
       <div className="max-w-md mx-auto">
-        <BackToHome />
         <Card>
           <h1 className="text-3xl font-bold mb-6 text-center">Вход</h1>
 

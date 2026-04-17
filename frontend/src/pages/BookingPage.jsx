@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Clock3 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -7,13 +7,17 @@ import { isAuthenticated } from "../services/auth";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
-import BackToHome from "../components/BackToHome";
+import BackButton from "../components/BackButton";
 
 export default function BookingPage() {
   const { salonId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [salon, setSalon] = useState(null);
+  const [specialistId, setSpecialistId] = useState(
+    searchParams.get("specialistId") || ""
+  );
   const [serviceId, setServiceId] = useState("");
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
@@ -30,7 +34,7 @@ export default function BookingPage() {
   }, [salonId]);
 
   useEffect(() => {
-    if (bookingDate) {
+    if (bookingDate && specialistId) {
       loadAvailability();
     } else {
       setAvailability({
@@ -40,7 +44,7 @@ export default function BookingPage() {
       });
       setBookingTime("");
     }
-  }, [bookingDate, salonId]);
+  }, [bookingDate, specialistId, salonId]);
 
   async function loadSalon() {
     try {
@@ -56,7 +60,10 @@ export default function BookingPage() {
   async function loadAvailability() {
     try {
       setLoadingAvailability(true);
-      const res = await api.get(`/bookings/availability/${salonId}?date=${bookingDate}`);
+
+      const res = await api.get(
+        `/bookings/availability/${salonId}?date=${bookingDate}&specialistId=${specialistId}`
+      );
 
       setAvailability({
         allSlots: Array.isArray(res.data?.allSlots) ? res.data.allSlots : [],
@@ -66,7 +73,11 @@ export default function BookingPage() {
           : [],
       });
 
-      if (bookingTime && Array.isArray(res.data?.busySlots) && res.data.busySlots.includes(bookingTime)) {
+      if (
+        bookingTime &&
+        Array.isArray(res.data?.busySlots) &&
+        res.data.busySlots.includes(bookingTime)
+      ) {
         setBookingTime("");
       }
     } catch (error) {
@@ -94,6 +105,7 @@ export default function BookingPage() {
     try {
       const res = await api.post("/bookings", {
         salonId: Number(salonId),
+        specialistId: Number(specialistId),
         serviceId: Number(serviceId),
         bookingDate,
         bookingTime,
@@ -109,12 +121,25 @@ export default function BookingPage() {
     }
   }
 
-  const services = Array.isArray(salon?.services) ? salon.services : [];
+  const specialists = Array.isArray(salon?.specialists) ? salon.specialists : [];
+
+  const selectedSpecialist = useMemo(() => {
+    if (!specialistId) return null;
+    return specialists.find((item) => item.id === Number(specialistId)) || null;
+  }, [specialists, specialistId]);
+
+  const specialistServices = useMemo(() => {
+    if (!selectedSpecialist) return [];
+
+    return (selectedSpecialist.specialistServices || [])
+      .map((item) => item.service)
+      .filter(Boolean);
+  }, [selectedSpecialist]);
 
   const selectedService = useMemo(() => {
-    if (!serviceId || !services.length) return null;
-    return services.find((service) => service.id === Number(serviceId)) || null;
-  }, [services, serviceId]);
+    if (!serviceId) return null;
+    return specialistServices.find((item) => item.id === Number(serviceId)) || null;
+  }, [specialistServices, serviceId]);
 
   if (!salon) {
     return <LoadingSpinner text="Загружаем страницу записи..." />;
@@ -123,13 +148,49 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-3xl mx-auto">
-        <BackToHome />
+        <BackButton />
 
         <Card>
           <h1 className="text-2xl font-bold mb-2">{salon.name}</h1>
-          <p className="text-gray-600 mb-6">{salon.description || "Описание пока не добавлено"}</p>
+          <p className="text-gray-600 mb-6">
+            {salon.description || "Описание пока не добавлено"}
+          </p>
 
           <form onSubmit={handleBooking} className="space-y-5">
+            <div>
+              <label className="block mb-2 font-medium">Выберите мастера</label>
+              <select
+                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+                value={specialistId}
+                onChange={(e) => {
+                  setSpecialistId(e.target.value);
+                  setServiceId("");
+                  setBookingTime("");
+                }}
+                required
+              >
+                <option value="">Выберите мастера</option>
+                {specialists.map((specialist) => (
+                  <option key={specialist.id} value={specialist.id}>
+                    {specialist.fullName} — {specialist.title || "Специалист"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedSpecialist && (
+              <div className="rounded-2xl bg-pink-50 border border-pink-100 p-4 text-sm text-gray-700">
+                <p>
+                  <span className="font-semibold">Мастер:</span>{" "}
+                  {selectedSpecialist.fullName}
+                </p>
+                <p>
+                  <span className="font-semibold">Специализация:</span>{" "}
+                  {selectedSpecialist.title || "Специалист"}
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block mb-2 font-medium">Выберите услугу</label>
               <select
@@ -137,9 +198,13 @@ export default function BookingPage() {
                 value={serviceId}
                 onChange={(e) => setServiceId(e.target.value)}
                 required
+                disabled={!specialistId}
               >
-                <option value="">Выберите услугу</option>
-                {services.map((service) => (
+                <option value="">
+                  {!specialistId ? "Сначала выберите мастера" : "Выберите услугу"}
+                </option>
+
+                {specialistServices.map((service) => (
                   <option key={service.id} value={service.id}>
                     {service.name} — {service.price} сом — {service.durationMin} мин
                   </option>
@@ -153,10 +218,12 @@ export default function BookingPage() {
                   <span className="font-semibold">Услуга:</span> {selectedService.name}
                 </p>
                 <p>
-                  <span className="font-semibold">Длительность:</span> {selectedService.durationMin} мин
+                  <span className="font-semibold">Длительность:</span>{" "}
+                  {selectedService.durationMin} мин
                 </p>
                 <p>
-                  <span className="font-semibold">Стоимость:</span> {selectedService.price} сом
+                  <span className="font-semibold">Стоимость:</span>{" "}
+                  {selectedService.price} сом
                 </p>
               </div>
             )}
@@ -171,6 +238,7 @@ export default function BookingPage() {
                 className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
                 value={bookingDate}
                 onChange={(e) => setBookingDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
                 required
               />
             </div>
@@ -181,7 +249,11 @@ export default function BookingPage() {
                 Время
               </label>
 
-              {!bookingDate ? (
+              {!specialistId ? (
+                <div className="text-gray-500 text-sm">Сначала выберите мастера</div>
+              ) : !serviceId ? (
+                <div className="text-gray-500 text-sm">Сначала выберите услугу</div>
+              ) : !bookingDate ? (
                 <div className="text-gray-500 text-sm">Сначала выберите дату</div>
               ) : loadingAvailability ? (
                 <div className="text-gray-500 text-sm">Загружаем слоты...</div>
@@ -202,7 +274,7 @@ export default function BookingPage() {
                             ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                             : isSelected
                             ? "bg-pink-500 text-white border-pink-500"
-                            : "bg-white text-pink-500 border-pink-300 hover:bg-pink-50"
+                            : "bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
                         }`}
                       >
                         {slot}
@@ -212,7 +284,7 @@ export default function BookingPage() {
                 </div>
               )}
 
-              {bookingDate && !loadingAvailability && (
+              {specialistId && serviceId && bookingDate && !loadingAvailability && (
                 <div className="mt-3 text-sm text-gray-500">
                   Серые слоты заняты. Доступны записи с 09:00 до 18:00.
                 </div>
@@ -230,9 +302,56 @@ export default function BookingPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={!bookingTime || !serviceId}>
-              Подтвердить запись
-            </Button>
+            {selectedSpecialist &&
+ selectedService &&
+ bookingDate &&
+ bookingTime && (
+  <div className="rounded-2xl border border-pink-100 bg-pink-50 p-5 space-y-2 text-sm text-gray-700">
+    <h3 className="text-base font-semibold text-black mb-2">
+      Детали записи
+    </h3>
+
+    <p>
+      <span className="font-medium">Салон:</span> {salon.name}
+    </p>
+
+    <p>
+      <span className="font-medium">Мастер:</span>{" "}
+      {selectedSpecialist.fullName}
+    </p>
+
+    <p>
+      <span className="font-medium">Услуга:</span>{" "}
+      {selectedService.name}
+    </p>
+
+    <p>
+      <span className="font-medium">Дата:</span> {bookingDate}
+    </p>
+
+    <p>
+      <span className="font-medium">Время:</span> {bookingTime}
+    </p>
+
+    <p className="text-pink-600 font-semibold pt-1">
+      Стоимость: {selectedService.price} сом
+    </p>
+  </div>
+)}
+
+            <Button
+  type="submit"
+  disabled={!bookingTime || !serviceId || !specialistId}
+  className="w-full"
+>
+  {!specialistId
+    ? "Выберите мастера"
+    : !serviceId
+    ? "Выберите услугу"
+    : !bookingTime
+    ? "Выберите время"
+    : "Подтвердить запись"}
+</Button>
           </form>
         </Card>
       </div>

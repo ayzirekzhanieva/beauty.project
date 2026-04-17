@@ -11,7 +11,16 @@ router.get("/", async (req, res) => {
   services: true,
   products: true,
   reviews: true,
-  specialists: true,
+  specialists: {
+  include: {
+    works: true,
+    specialistServices: {
+      include: {
+        service: true,
+      },
+    },
+  },
+},
 },
       orderBy: {
         id: "desc",
@@ -35,7 +44,16 @@ router.get("/:id", async (req, res) => {
   services: true,
   products: true,
   reviews: true,
-  specialists: true,
+  specialists: {
+  include: {
+    works: true,
+    specialistServices: {
+      include: {
+        service: true,
+      },
+    },
+  },
+},
 },
     });
 
@@ -46,6 +64,34 @@ router.get("/:id", async (req, res) => {
     res.json(salon);
   } catch (error) {
     console.error("GET SALON BY ID ERROR:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+router.get("/specialists/:id", async (req, res) => {
+  try {
+    const specialistId = Number(req.params.id);
+
+    const specialist = await prisma.specialist.findUnique({
+      where: { id: specialistId },
+      include: {
+  salon: true,
+  works: true,
+  specialistServices: {
+    include: {
+      service: true,
+    },
+  },
+},
+    });
+
+    if (!specialist) {
+      return res.status(404).json({ message: "Мастер не найден" });
+    }
+
+    res.json(specialist);
+  } catch (error) {
+    console.error("GET SPECIALIST DETAILS ERROR:", error);
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });

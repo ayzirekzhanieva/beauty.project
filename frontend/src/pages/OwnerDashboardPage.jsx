@@ -44,6 +44,7 @@ export default function OwnerDashboardPage() {
   const [editingSalonId, setEditingSalonId] = useState(null);
   const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [specialistsTab, setSpecialistsTab] = useState("list");
 
   const [editSalonForm, setEditSalonForm] = useState({
     name: "",
@@ -618,7 +619,9 @@ for (let hour = 0; hour < 24; hour++) {
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
         <BackButton />
-        <h1 className="text-4xl font-bold mb-4">Кабинет владельца</h1>
+        <h1 className="text-3xl font-semibold">
+  Кабинет владельца
+</h1>
 
 <OwnerTabs
   activeTab={activeTab}
@@ -645,7 +648,7 @@ for (let hour = 0; hour < 24; hour++) {
 {activeTab === "overview" && (
         <div className="grid lg:grid-cols-3 gap-6 mb-8 mt-6">
           <Card>
-            <h2 className="text-2xl font-semibold mb-4">Создать салон</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Создать салон</h2>
             <form onSubmit={createSalon} className="space-y-3">
               <input
                 type="text"
@@ -696,7 +699,7 @@ for (let hour = 0; hour < 24; hour++) {
           </Card>
 
           <Card>
-            <h2 className="text-2xl font-semibold mb-4">Добавить услугу</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить услугу</h2>
             <form onSubmit={createService} className="space-y-3">
               <select
                 name="salonId"
@@ -759,7 +762,7 @@ for (let hour = 0; hour < 24; hour++) {
           </Card>
 
           <Card>
-            <h2 className="text-2xl font-semibold mb-4">Добавить товар</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить товар</h2>
             <form onSubmit={createProduct} className="space-y-3">
               <select
                 name="salonId"
@@ -824,13 +827,7 @@ for (let hour = 0; hour < 24; hour++) {
 )}
 
 {(activeTab === "overview" || activeTab === "specialists") && (
-        <Card className="mb-8 mt-6">
-    <h2 className="text-2xl font-semibold mb-4">
-  {activeTab === "specialists"
-    ? "Мои салоны и мастера"
-    : "Мои салоны, услуги и товары"}
-</h2>
-
+        <div className="mb-8 mt-0">
           {ownerSalons.length === 0 ? (
             <p className="text-gray-500">У вас пока нет салонов.</p>
           ) : (
@@ -838,7 +835,7 @@ for (let hour = 0; hour < 24; hour++) {
               {ownerSalons.map((salon) => (
   <div
     key={salon.id}
-    className="border border-pink-100 rounded-3xl p-5"
+    className="p-2"
   >
     {editingSalonId === salon.id ? (
       <div className="space-y-4 mb-5 bg-pink-50 border border-pink-100 rounded-3xl p-4">
@@ -906,6 +903,8 @@ for (let hour = 0; hour < 24; hour++) {
         </div>
       </div>
     ) : (
+  <>
+    {activeTab === "salons" && (
       <>
         <h3 className="text-2xl font-bold mb-2">{salon.name}</h3>
         <p className="text-gray-600 mb-2">{salon.description}</p>
@@ -925,6 +924,8 @@ for (let hour = 0; hour < 24; hour++) {
         </div>
       </>
     )}
+  </>
+)}
 {activeTab === "overview" && (
     <div className="grid md:grid-cols-2 gap-6 items-start">
       <div>
@@ -939,7 +940,7 @@ for (let hour = 0; hour < 24; hour++) {
     {salon.services.map((service) => (
       <div
         key={service.id}
-        className="border border-pink-100 rounded-2xl p-4"
+        className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100 max-w-md"
       >
         {editingServiceId === service.id ? (
           <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
@@ -1066,7 +1067,7 @@ for (let hour = 0; hour < 24; hour++) {
     {salon.products.map((product) => (
       <div
         key={product.id}
-        className="border border-pink-100 rounded-2xl p-4"
+        className="bg-white rounded-2xl p-5 shadow-sm border border-pink-100 max-w-md"
       >
         {editingProductId === product.id ? (
           <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
@@ -1183,8 +1184,34 @@ for (let hour = 0; hour < 24; hour++) {
     </div>
 )}
 {activeTab === "specialists" && (
+  <div className="mb-6">
+  <div className="mt-2 flex flex-wrap gap-2 bg-white rounded-3xl p-2 shadow-sm border border-pink-100">
+
+    {[
+      { key: "list", label: "Список" },
+      { key: "create", label: "Добавить мастера" },
+      { key: "services", label: "Услуги" },
+      { key: "works", label: "Работы" },
+    ].map((tab) => (
+      <button
+        key={tab.key}
+        type="button"
+        onClick={() => setSpecialistsTab(tab.key)}
+        className={`px-4 py-2 rounded-2xl text-sm font-medium transition ${
+          specialistsTab === tab.key
+            ? "bg-pink-500 text-white"
+            : "bg-white text-gray-600 hover:bg-pink-50"
+        }`}
+      >
+        {tab.label}
+      </button>
+    ))}
+
+  </div>
+</div>
+)}
+  {specialistsTab === "list" && (
   <div className="mt-8">
-    <h4 className="text-xl font-semibold mb-3">Мастера</h4>
 
     {salon.specialists.length === 0 ? (
       <div className="border border-dashed border-pink-200 rounded-2xl p-6 text-gray-500 bg-pink-50">
@@ -1195,7 +1222,7 @@ for (let hour = 0; hour < 24; hour++) {
         {salon.specialists.map((specialist) => (
   <div
     key={specialist.id}
-    className="border border-pink-100 rounded-2xl p-4 bg-white"
+    className="rounded-3xl p-5 bg-white shadow-md hover:shadow-lg transition border border-pink-50"
   >
     {editingSpecialistId === specialist.id ? (
       <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
@@ -1269,63 +1296,33 @@ for (let hour = 0; hour < 24; hour++) {
             className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
           />
         </div>
-
-        <div className="flex gap-2">
-          <Button onClick={() => saveSpecialistEdit(specialist.id)}>
-            Сохранить
-          </Button>
-          <Button
-            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-            onClick={() => setEditingSpecialistId(null)}
-          >
-            Отмена
-          </Button>
-        </div>
         <div>
   <label className="block text-sm font-medium text-gray-600 mb-2">
     Начало рабочего дня
   </label>
   <select
-  value={editSpecialistForm.workStartTime}
-  onChange={(e) =>
-    setEditSpecialistForm({
-      ...editSpecialistForm,
-      workStartTime: e.target.value,
-    })
-  }
-  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
->
-  {timeOptions.map((time) => (
-    <option key={time} value={time}>
-      {time}
-    </option>
-  ))}
-</select>
-
-<select
-  value={editSpecialistForm.workEndTime}
-  onChange={(e) =>
-    setEditSpecialistForm({
-      ...editSpecialistForm,
-      workEndTime: e.target.value,
-    })
-  }
-  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
->
-  {timeOptions.map((time) => (
-    <option key={time} value={time}>
-      {time}
-    </option>
-  ))}
-</select>
+    value={editSpecialistForm.workStartTime}
+    onChange={(e) =>
+      setEditSpecialistForm({
+        ...editSpecialistForm,
+        workStartTime: e.target.value,
+      })
+    }
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  >
+    {timeOptions.map((time) => (
+      <option key={time} value={time}>
+        {time}
+      </option>
+    ))}
+  </select>
 </div>
 
 <div>
   <label className="block text-sm font-medium text-gray-600 mb-2">
     Конец рабочего дня
   </label>
-  <input
-    type="time"
+  <select
     value={editSpecialistForm.workEndTime}
     onChange={(e) =>
       setEditSpecialistForm({
@@ -1334,7 +1331,13 @@ for (let hour = 0; hour < 24; hour++) {
       })
     }
     className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-  />
+  >
+    {timeOptions.map((time) => (
+      <option key={time} value={time}>
+        {time}
+      </option>
+    ))}
+  </select>
 </div>
 
 <div>
@@ -1364,6 +1367,19 @@ for (let hour = 0; hour < 24; hour++) {
     })}
   </div>
 </div>
+
+<div className="flex gap-3 mt-6">
+  <Button onClick={() => saveSpecialistEdit(specialist.id)}>
+    Сохранить
+  </Button>
+
+  <Button
+    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+    onClick={() => setEditingSpecialistId(null)}
+  >
+    Отмена
+  </Button>
+</div>
       </div>
     ) : (
       <>
@@ -1371,7 +1387,7 @@ for (let hour = 0; hour < 24; hour++) {
           <img
             src={`http://localhost:5000${specialist.photoUrl}`}
             alt={specialist.fullName}
-            className="w-full h-48 object-cover rounded-2xl mb-4"
+            className="w-full h-44 object-cover rounded-2xl mb-4"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
@@ -1379,63 +1395,14 @@ for (let hour = 0; hour < 24; hour++) {
         )}
 
         <p className="font-semibold text-lg">{specialist.fullName}</p>
-        <p className="text-pink-500">
+        <p className="flex items-center gap-2 text-pink-500 mt-4 mb-4">
           {specialist.title || "Специалист"}
         </p>
         <p className="text-gray-600 mt-2">
           {specialist.bio || "Без описания"}
         </p>
 
-        {specialist.specialistServices?.length > 0 && (
-  <div className="mt-4">
-    <p className="font-medium mb-2">Услуги мастера</p>
-    <div className="flex flex-wrap gap-2">
-      {specialist.specialistServices.map((item) => (
-        <div
-          key={item.id}
-          className="inline-flex items-center gap-2 bg-pink-50 border border-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm"
-        >
-          <span>{item.service.name}</span>
-          <button
-            type="button"
-            onClick={() => deleteSpecialistService(item.id)}
-            className="text-pink-500 font-semibold"
-          >
-            ×
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-        {specialist.works?.length > 0 && (
-          <div className="mt-4">
-            <p className="font-medium mb-2">Работы</p>
-            <div className="grid grid-cols-2 gap-2">
-              {specialist.works.map((work) => (
-                <div key={work.id} className="relative">
-                  <img
-                    src={`http://localhost:5000${work.imageUrl}`}
-                    alt={work.caption || "Work"}
-                    className="w-full h-24 object-cover rounded-xl"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => deleteSpecialistWork(work.id)}
-                    className="absolute top-1 right-1 bg-white/90 text-pink-500 text-xs px-2 py-1 rounded-lg border border-pink-200"
-                  >
-                    Удалить
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          
-        )}
-
-        <div className="flex gap-2 mt-4">
+        <div className="grid grid-cols-2 gap-3 mt-5">
           <Button onClick={() => startEditSpecialist(specialist)}>
             Изменить
           </Button>
@@ -1454,12 +1421,12 @@ for (let hour = 0; hour < 24; hour++) {
       </div>
     )}
   </div>
-)}
+  )}
   </div>
 ))}
             </div>
           )}
-        </Card>
+        </div>
 )}
 
         {activeTab === "bookings" && (
@@ -1470,224 +1437,226 @@ for (let hour = 0; hour < 24; hour++) {
   />
 </Card>
         )}
-        {activeTab === "specialists" && (
+        {specialistsTab === "create" && (
 <Card className="mb-8">
-  <h2 className="text-2xl font-semibold mb-4">Добавить мастера</h2>
-
-  {activeTab === "specialists" && (
-  <Card className="mb-8">
-    <h2 className="text-2xl font-semibold mb-4">Добавить работу мастера</h2>
-
-    {activeTab === "specialists" && (
-  <Card className="mb-8">
-    <h2 className="text-2xl font-semibold mb-4">Привязать услугу к мастеру</h2>
-
-    <form onSubmit={createSpecialistService} className="grid md:grid-cols-2 gap-4">
-      <select
-        name="specialistId"
-        value={formSpecialistService.specialistId}
-        onChange={handleSpecialistServiceChange}
-        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-        required
-      >
-        <option value="">Выберите мастера</option>
-        {ownerSalons.flatMap((salon) =>
-          salon.specialists.map((specialist) => (
-            <option key={specialist.id} value={specialist.id}>
-              {specialist.fullName} — {salon.name}
-            </option>
-          ))
-        )}
-      </select>
-
-      <select
-        name="serviceId"
-        value={formSpecialistService.serviceId}
-        onChange={handleSpecialistServiceChange}
-        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-        required
-      >
-        <option value="">Выберите услугу</option>
-        {ownerSalons.flatMap((salon) =>
-          salon.services.map((service) => (
-            <option key={service.id} value={service.id}>
-              {service.name} — {salon.name}
-            </option>
-          ))
-        )}
-      </select>
-
-      <div className="md:col-span-2">
-        <Button type="submit">Привязать услугу</Button>
-      </div>
-    </form>
-  </Card>
-)}
-
-    <form onSubmit={createSpecialistWork} className="grid md:grid-cols-2 gap-4">
-      <select
-        name="specialistId"
-        value={formWork.specialistId}
-        onChange={handleWorkChange}
-        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-        required
-      >
-        <option value="">Выберите мастера</option>
-        {ownerSalons.flatMap((salon) =>
-          salon.specialists.map((specialist) => (
-            <option key={specialist.id} value={specialist.id}>
-              {specialist.fullName} — {salon.name}
-            </option>
-          ))
-        )}
-      </select>
-
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) =>
-          setFormWork({
-            ...formWork,
-            image: e.target.files?.[0] || null,
-          })
-        }
-        className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-        required
-      />
-
-      <textarea
-        name="caption"
-        placeholder="Подпись к работе"
-        value={formWork.caption}
-        onChange={handleWorkChange}
-        className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-        rows="3"
-      />
-
-      <div className="md:col-span-2">
-        <Button type="submit">Добавить работу</Button>
-      </div>
-    </form>
-  </Card>
-)}
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить мастера</h2>
 
   <form onSubmit={createSpecialist} className="grid md:grid-cols-2 gap-4">
     <select
-      name="salonId"
-      value={formSpecialist.salonId}
-      onChange={handleSpecialistChange}
+    name="salonId"
+    value={formSpecialist.salonId}
+    onChange={handleSpecialistChange}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+    required
+  >
+    <option value="">Выберите салон</option>
+    {ownerSalons.map((salon) => (
+      <option key={salon.id} value={salon.id}>
+        {salon.name}
+      </option>
+    ))}
+  </select>
+
+  <input
+    type="text"
+    name="fullName"
+    placeholder="Имя мастера"
+    value={formSpecialist.fullName}
+    onChange={handleSpecialistChange}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+    required
+  />
+
+  <input
+    type="text"
+    name="title"
+    placeholder="Специализация"
+    value={formSpecialist.title}
+    onChange={handleSpecialistChange}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  />
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) =>
+      setFormSpecialist({
+        ...formSpecialist,
+        photo: e.target.files?.[0] || null,
+      })
+    }
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  />
+
+  <textarea
+    name="bio"
+    placeholder="Описание мастера"
+    value={formSpecialist.bio}
+    onChange={handleSpecialistChange}
+    className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+    rows={3}
+  />
+
+  <select
+    name="workStartTime"
+    value={formSpecialist.workStartTime}
+    onChange={handleSpecialistChange}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  >
+    {timeOptions.map((time) => (
+      <option key={time} value={time}>
+        {time}
+      </option>
+    ))}
+  </select>
+
+  <select
+    name="workEndTime"
+    value={formSpecialist.workEndTime}
+    onChange={handleSpecialistChange}
+    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+  >
+    {timeOptions.map((time) => (
+      <option key={time} value={time}>
+        {time}
+      </option>
+    ))}
+  </select>
+
+  <div className="md:col-span-2">
+    <label className="block text-sm font-medium text-gray-600 mb-2">
+      Рабочие дни
+    </label>
+
+    <div className="flex flex-wrap gap-2">
+      {weekDays.map((day) => {
+        const selectedDays = (formSpecialist.workDays || "").split(",");
+        const isSelected = selectedDays.includes(String(day.value));
+
+        return (
+          <button
+            key={day.value}
+            type="button"
+            onClick={() => toggleWorkDay(day.value)}
+            className={`px-4 py-2 rounded-2xl border transition ${
+              isSelected
+                ? "bg-pink-500 text-white border-pink-500"
+                : "bg-white text-gray-600 border-pink-200 hover:bg-pink-50"
+            }`}
+          >
+            {day.label}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
+  <div className="md:col-span-2">
+    <Button type="submit">Добавить мастера</Button>
+  </div>
+  </form>
+</Card>
+        )}
+{specialistsTab === "services" && (
+<Card className="mb-8">
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+    Привязать услугу к мастеру
+  </h2>
+
+  <form onSubmit={createSpecialistService} className="grid md:grid-cols-2 gap-4">
+    <select
+      name="specialistId"
+      value={formSpecialistService.specialistId}
+      onChange={handleSpecialistServiceChange}
       className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
       required
     >
-      <option value="">Выберите салон</option>
-      {ownerSalons.map((salon) => (
-        <option key={salon.id} value={salon.id}>
-          {salon.name}
-        </option>
-      ))}
+      <option value="">Выберите мастера</option>
+      {ownerSalons.flatMap((salon) =>
+        salon.specialists.map((specialist) => (
+          <option key={specialist.id} value={specialist.id}>
+            {specialist.fullName} — {salon.name}
+          </option>
+        ))
+      )}
     </select>
 
-    <input
-      type="text"
-      name="fullName"
-      placeholder="Имя мастера"
-      value={formSpecialist.fullName}
-      onChange={handleSpecialistChange}
+    <select
+      name="serviceId"
+      value={formSpecialistService.serviceId}
+      onChange={handleSpecialistServiceChange}
       className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
       required
-    />
+    >
+      <option value="">Выберите услугу</option>
+      {ownerSalons.flatMap((salon) =>
+        salon.services.map((service) => (
+          <option key={service.id} value={service.id}>
+            {service.name} — {salon.name}
+          </option>
+        ))
+      )}
+    </select>
 
-    <input
-      type="text"
-      name="title"
-      placeholder="Специализация"
-      value={formSpecialist.title}
-      onChange={handleSpecialistChange}
+    <div className="md:col-span-2">
+      <Button type="submit">Привязать услугу</Button>
+    </div>
+  </form>
+</Card>
+)}
+{specialistsTab === "works" && (
+<Card className="mb-8">
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+    Добавить работу мастера
+  </h2>
+
+  <form onSubmit={createSpecialistWork} className="grid md:grid-cols-2 gap-4">
+    <select
+      name="specialistId"
+      value={formWork.specialistId}
+      onChange={handleWorkChange}
       className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-    />
+      required
+    >
+      <option value="">Выберите мастера</option>
+      {ownerSalons.flatMap((salon) =>
+        salon.specialists.map((specialist) => (
+          <option key={specialist.id} value={specialist.id}>
+            {specialist.fullName} — {salon.name}
+          </option>
+        ))
+      )}
+    </select>
 
     <input
       type="file"
       accept="image/*"
       onChange={(e) =>
-        setFormSpecialist({
-          ...formSpecialist,
-          photo: e.target.files?.[0] || null,
+        setFormWork({
+          ...formWork,
+          image: e.target.files?.[0] || null,
         })
       }
       className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+      required
     />
 
     <textarea
-  name="bio"
-  placeholder="Описание мастера"
-  value={formSpecialist.bio}
-  onChange={handleSpecialistChange}
-  className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-  rows="4"
-/>
+      name="caption"
+      placeholder="Подпись к работе"
+      value={formWork.caption}
+      onChange={handleWorkChange}
+      className="md:col-span-2 w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+      rows={3}
+    />
 
-<select
-  name="workStartTime"
-  value={formSpecialist.workStartTime}
-  onChange={handleSpecialistChange}
-  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
->
-  {timeOptions.map((time) => (
-    <option key={time} value={time}>
-      {time}
-    </option>
-  ))}
-</select>
-
-<select
-  name="workEndTime"
-  value={formSpecialist.workEndTime}
-  onChange={handleSpecialistChange}
-  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
->
-  {timeOptions.map((time) => (
-    <option key={time} value={time}>
-      {time}
-    </option>
-  ))}
-</select>
-
-<div className="md:col-span-2">
-  <label className="block text-sm font-medium text-gray-600 mb-2">
-    Рабочие дни
-  </label>
-
-  <div className="flex flex-wrap gap-2">
-    {weekDays.map((day) => {
-      const selectedDays = (formSpecialist.workDays || "").split(",");
-
-      const isSelected = selectedDays.includes(String(day.value));
-
-      return (
-        <button
-          key={day.value}
-          type="button"
-          onClick={() => toggleWorkDay(day.value)}
-          className={`px-4 py-2 rounded-2xl border transition ${
-            isSelected
-              ? "bg-pink-500 text-white border-pink-500"
-              : "bg-white text-gray-600 border-pink-200 hover:bg-pink-50"
-          }`}
-        >
-          {day.label}
-        </button>
-      );
-    })}
-  </div>
-</div>
-
-<div className="md:col-span-2">
-  <Button type="submit">Добавить мастера</Button>
-</div>
+    <div className="md:col-span-2">
+      <Button type="submit">Добавить работу</Button>
+    </div>
   </form>
-</Card> 
-        )}
+</Card>
+)}
+
         {confirmState.isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6">
@@ -1727,7 +1696,7 @@ for (let hour = 0; hour < 24; hour++) {
 
   return (
     <div className="sticky top-4 z-20 bg-pink-50 pb-4">
-      <div className="flex flex-wrap gap-2 bg-white rounded-3xl p-2 shadow-sm border border-pink-100">
+      <div className="mt-2 flex flex-wrap gap-2 bg-white rounded-3xl p-2 shadow-sm border border-pink-100"> 
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -1779,7 +1748,7 @@ for (let hour = 0; hour < 24; hour++) {
 
   function BookingCard({ booking }) {
     return (
-      <div className="border border-pink-100 rounded-2xl p-4 bg-white">
+      <div className="rounded-3xl p-5 bg-white shadow-md hover:shadow-lg transition border border-pink-50">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <p className="font-semibold text-lg">{booking.salon.name}</p>

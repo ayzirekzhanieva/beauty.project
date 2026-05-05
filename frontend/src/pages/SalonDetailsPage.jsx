@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   MapPin,
   Scissors,
   ShoppingBag,
-  ArrowLeft,
   Clock3,
-  DollarSign,
+  UserRound,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -17,9 +16,29 @@ import EmptyState from "../components/EmptyState";
 import StarRating from "../components/StarRating";
 import { getUser, isAuthenticated } from "../services/auth";
 import { FALLBACK_SALON_IMAGE, getImageUrl } from "../services/constants";
-import { UserRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+
+function formatReviewDate(dateString) {
+  if (!dateString) return "—";
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getInitials(name) {
+  if (!name) return "U";
+
+  return name
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+}
 
 export default function SalonDetailsPage() {
   const { id } = useParams();
@@ -37,8 +56,6 @@ export default function SalonDetailsPage() {
     rating: 5,
     comment: "",
   });
-
-  const [selectedSpecialistId, setSelectedSpecialistId] = useState("");
 
   useEffect(() => {
     loadSalon();
@@ -126,165 +143,241 @@ export default function SalonDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-pink-500 font-medium mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Назад
-        </Link>
+    <div className="min-h-screen bg-pink-50 px-4 py-6 sm:px-6">
+  <div className="max-w-6xl mx-auto space-y-8">
+        <BackButton />
 
         <Card className="overflow-hidden p-0 mb-8">
-          <img
-            src={getImageUrl(salon.imageUrl)}
-            alt={salon.name}
-            className="w-full h-80 object-cover"
-          />
+  <img
+    src={getImageUrl(salon.imageUrl)}
+    alt={salon.name}
+    className="w-full h-72 md:h-96 object-cover"
+    onError={(e) => {
+      e.currentTarget.src = FALLBACK_SALON_IMAGE;
+    }}
+  />
 
-          <div className="p-6 md:p-8">
-            <div className="mb-4">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                {salon.name}
-              </h1>
+ <div className="p-6 max-w-6xl mx-auto">
+    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+      <div className="flex-1">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+          {salon.name}
+        </h1>
 
-              <div className="flex items-center gap-3 mb-4">
-                <StarRating rating={reviewsData.averageRating} size={18} />
-                <span className="text-gray-500">
-                  {reviewsData.totalReviews
-                    ? `${reviewsData.averageRating} (${reviewsData.totalReviews} отзывов)`
-                    : "Пока нет отзывов"}
-                </span>
-              </div>
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <div className="flex items-center gap-2">
+            <StarRating rating={reviewsData.averageRating} size={18} />
+            <span className="font-medium text-gray-900">
+              {reviewsData.averageRating || "0.0"}
+            </span>
+          </div>
 
-              <p className="text-gray-600 text-lg mb-4">
-                {salon.description || "Описание пока не добавлено"}
+          <span className="text-gray-500">
+            {reviewsData.totalReviews > 0
+              ? `${reviewsData.totalReviews} отзывов`
+              : "Пока нет отзывов"}
+          </span>
+        </div>
+
+        <p className="text-gray-600 text-lg leading-8 mb-5 max-w-3xl">
+          {salon.description || "Описание пока не добавлено"}
+        </p>
+
+        <div className="flex items-start gap-2 text-gray-500 mb-6">
+          <MapPin className="w-5 h-5 text-pink-400 mt-1 shrink-0" />
+          <span>{salon.address || "Адрес не указан"}</span>
+        </div>
+
+        <div className="grid gap-3 sm:flex sm:flex-wrap">
+          <Link to={`/booking/${salon.id}`} className="w-full sm:w-auto">
+  <Button className="w-full sm:w-auto">Записаться в салон</Button>
+</Link>
+
+<a href="#reviews" className="w-full sm:w-auto">
+  <Button className="w-full sm:w-auto bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+    Смотреть отзывы
+  </Button>
+</a>
+        </div>
+      </div>
+
+      <div className="w-full lg:w-[280px]">
+        <div className="rounded-3xl border border-pink-100 bg-pink-50 p-5">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Кратко о салоне
+          </h3>
+
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="text-gray-500 mb-1">Рейтинг</p>
+              <p className="font-semibold text-gray-900">
+                {reviewsData.averageRating || "0.0"} / 5
               </p>
-
-              <div className="flex items-center gap-2 text-gray-500">
-                <MapPin className="w-5 h-5 text-pink-400" />
-                <span>{salon.address || "Адрес не указан"}</span>
-              </div>
             </div>
 
-            <Link to={`/booking/${salon.id}`}>
-              <Button>Записаться в салон</Button>
-            </Link>
+            <div>
+              <p className="text-gray-500 mb-1">Отзывы</p>
+              <p className="font-semibold text-gray-900">
+                {reviewsData.totalReviews}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-gray-500 mb-1">Услуги</p>
+              <p className="font-semibold text-gray-900">
+                {salon.services?.length || 0}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-gray-500 mb-1">Мастера</p>
+              <p className="font-semibold text-gray-900">
+                {salon.specialists?.length || 0}
+              </p>
+            </div>
           </div>
-        </Card>
-
-        <div className="mb-6">
-  <label className="block text-sm font-medium text-gray-600 mb-2">
-    Выберите мастера
-  </label>
-
-  <select
-    value={selectedSpecialistId}
-    onChange={(e) => setSelectedSpecialistId(e.target.value)}
-    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-    required
-  >
-    <option value="">Выберите мастера</option>
-
-    {salon.specialists.map((specialist) => (
-      <option key={specialist.id} value={specialist.id}>
-        {specialist.fullName} — {specialist.title}
-      </option>
-    ))}
-  </select>
-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Card>
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <Scissors className="w-5 h-5 text-pink-400" />
-              <h2 className="text-2xl font-semibold">Услуги</h2>
+  <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex items-center gap-2">
+      <Scissors className="w-5 h-5 text-pink-400" />
+      <h2 className="text-2xl font-semibold text-gray-900">Услуги</h2>
+    </div>
+
+    <span className="text-sm text-gray-500">
+      {salon.services?.length || 0} услуг
+    </span>
+  </div>
+
+  {salon.services?.length === 0 ? (
+    <EmptyState
+      title="Нет услуг"
+      description="Салон пока не добавил услуги."
+    />
+  ) : (
+    <div className="space-y-4">
+      {(salon.services || []).map((service) => (
+        <div
+          key={service.id}
+          className="rounded-3xl border border-pink-100 bg-white p-5 hover:shadow-md transition"
+        >
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {service.name}
+              </h3>
+              <p className="text-gray-600 mt-1 leading-6">
+                {service.description || "Описание услуги скоро появится"}
+              </p>
             </div>
 
-            {salon.services?.length === 0 ? (
-              <EmptyState
-                title="Нет услуг"
-                description="Салон пока не добавил услуги."
-              />
-            ) : (
-              <div className="space-y-4">
-                {(salon.services || []).map((service) => (
-                  <div
-                    key={service.id}
-                    className="border border-pink-100 rounded-2xl p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-lg">{service.name}</h3>
-                      <span className="text-pink-500 font-bold">
-                        {service.price} сом
-                      </span>
-                    </div>
+            <span className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600">
+              {service.price} сом
+            </span>
+          </div>
 
-                    <p className="text-gray-600 mb-3">
-                      {service.description || "Без описания"}
-                    </p>
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
+              <Clock3 className="w-4 h-4 text-pink-400" />
+              {service.durationMin} мин
+            </span>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock3 className="w-4 h-4" />
-                        {service.durationMin} мин
-                      </span>
-
-                      <span className="inline-flex items-center gap-1">
-                        {service.price} сом
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
+              от {service.price} сом
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Card>
 
           <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <ShoppingBag className="w-5 h-5 text-pink-400" />
-              <h2 className="text-2xl font-semibold">Товары</h2>
+  <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex items-center gap-2">
+      <ShoppingBag className="w-5 h-5 text-pink-400" />
+      <h2 className="text-2xl font-semibold text-gray-900">Товары</h2>
+    </div>
+
+    <span className="text-sm text-gray-500">
+      {salon.products?.length || 0} товаров
+    </span>
+  </div>
+
+  {salon.products?.length === 0 ? (
+    <EmptyState
+      title="Нет товаров"
+      description="Салон пока не добавил товары."
+    />
+  ) : (
+    <div className="space-y-4">
+      {(salon.products || []).map((product) => (
+        <div
+          key={product.id}
+          className="rounded-3xl border border-pink-100 bg-white p-5 hover:shadow-md transition"
+        >
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {product.name}
+              </h3>
+              <p className="text-gray-600 mt-1 leading-6">
+                {product.description || "Описание товара скоро появится"}
+              </p>
             </div>
 
-            {salon.products?.length === 0 ? (
-              <EmptyState
-                title="Нет товаров"
-                description="Салон пока не добавил товары."
-              />
+            <span className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600">
+              {product.price} сом
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
+              В наличии: {product.stock}
+            </span>
+
+            {product.stock > 0 ? (
+              <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm text-green-700">
+                Есть в наличии
+              </span>
             ) : (
-              <div className="space-y-4">
-                {(salon.products || []).map((product) => (
-                  <div
-                    key={product.id}
-                    className="border border-pink-100 rounded-2xl p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-lg">{product.name}</h3>
-                      <span className="text-pink-500 font-bold">
-                        {product.price} сом
-                      </span>
-                    </div>
-
-                    <p className="text-gray-600 mb-2">
-                      {product.description || "Без описания"}
-                    </p>
-
-                    <p className="text-sm text-gray-500">
-                      В наличии: {product.stock}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-700">
+                Нет в наличии
+              </span>
             )}
-          </Card>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Card>
         </div>
 
         <Card className="mb-8">
-  <div className="flex items-center gap-2 mb-4">
+  <div className="flex items-center justify-between gap-4 mb-6">
+  <div className="flex items-center gap-2">
     <UserRound className="w-5 h-5 text-pink-400" />
-    <h2 className="text-2xl font-semibold">Наши мастера</h2>
+    <h2 className="text-2xl font-semibold text-gray-900">Наши мастера</h2>
   </div>
+
+  <div className="flex items-center gap-3">
+    <span className="text-sm text-gray-500">
+      {salon.specialists?.length || 0} мастеров
+    </span>
+
+      <Link to={`/salons/${salon.id}/specialists`}>
+        <Button className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+          Смотреть всех
+        </Button>
+      </Link>
+  </div>
+</div>
 
   {salon.specialists?.length === 0 ? (
     <EmptyState
@@ -292,69 +385,100 @@ export default function SalonDetailsPage() {
       description="Скоро здесь появится команда салона."
     />
   ) : (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {salon.specialists.map((specialist) => (
-        <div
-          key={specialist.id}
-          className="border border-pink-100 rounded-2xl overflow-hidden bg-white"
-        >
-          <img
-            src={getImageUrl(specialist.photoUrl)}
-            alt={specialist.fullName}
-            className="w-full h-56 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = FALLBACK_SALON_IMAGE;
-            }}
-          />
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {salon.specialists.map((specialist) => {
+        const specialistServices = (specialist.specialistServices || [])
+          .map((item) => item.service)
+          .filter(Boolean);
 
-          <div className="p-4">
-            <h3 className="text-xl font-semibold">{specialist.fullName}</h3>
-            <p className="text-pink-500 font-medium mb-2">
-              {specialist.title || "Специалист"}
-            </p>
-            <p className="text-gray-600">
-              {specialist.bio || "Описание скоро появится"}
-            </p>
+        const workDaysMap = {
+          1: "Пн",
+          2: "Вт",
+          3: "Ср",
+          4: "Чт",
+          5: "Пт",
+          6: "Сб",
+          7: "Вс",
+        };
+
+        const formattedDays = (specialist.workDays || "1,2,3,4,5,6")
+          .split(",")
+          .map((day) => workDaysMap[day.trim()])
+          .filter(Boolean);
+
+        return (
+          <div
+            key={specialist.id}
+            className="overflow-hidden rounded-3xl border border-pink-100 bg-white shadow-sm hover:shadow-lg transition flex flex-col"
+          >
+            <img
+              src={getImageUrl(specialist.photoUrl)}
+              alt={specialist.fullName}
+              className="w-full h-60 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_SALON_IMAGE;
+              }}
+            />
+
+            <div className="p-5 flex flex-col flex-1">
+              <div className="mb-3">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {specialist.fullName}
+                </h3>
+
+                <p className="text-pink-500 font-medium mt-1">
+                  {specialist.title || "Специалист"}
+                </p>
+              </div>
+
+              <p className="text-gray-600 leading-6 mb-4 min-h-[72px]">
+                {specialist.bio || "Описание скоро появится"}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 mt-auto">
+                <Button
+                  className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+                  onClick={() => navigate(`/specialists/${specialist.id}`)}
+                >
+                  Подробнее
+                </Button>
+
+                <Button
+                  onClick={() =>
+                    navigate(`/booking/${salon.id}?specialistId=${specialist.id}`)
+                  }
+                >
+                  Записаться
+                </Button>
+              </div>
+            </div>
           </div>
-          <Button
-  onClick={() =>
-    navigate(`/booking/${salon.id}?specialistId=${specialist.id}`)
-  }
-  className="w-full mt-4"
->
-  Записаться к мастеру
-</Button>
-          {specialist.works?.length > 0 && (
-  <div className="mt-4">
-    <p className="font-medium mb-2">Портфолио</p>
-    <div className="grid grid-cols-2 gap-2">
-      {specialist.works.map((work) => (
-        <div key={work.id}>
-          <img
-            src={getImageUrl(work.imageUrl)}
-            alt={work.caption || "Portfolio work"}
-            className="w-full h-28 object-cover rounded-xl"
-            onError={(e) => {
-              e.currentTarget.src = FALLBACK_SALON_IMAGE;
-            }}
-          />
-          {work.caption && (
-            <p className="text-xs text-gray-500 mt-1">{work.caption}</p>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-        </div>
-      ))}
+        );
+      })}
     </div>
   )}
 </Card>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
-            <h2 className="text-2xl font-semibold mb-4">Оставить отзыв</h2>
+
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="xl:col-span-1 h-fit">
+            <div className="flex items-center justify-between gap-4 mb-5">
+  <div>
+    <h2 className="text-2xl font-semibold text-gray-900">
+      {currentUserReview ? "Изменить отзыв" : "Оставить отзыв"}
+    </h2>
+    <p className="text-gray-500 mt-1">
+      Поделитесь впечатлением о салоне
+    </p>
+  </div>
+
+  {currentUserReview && (
+    <span className="inline-flex rounded-full border border-pink-200 bg-pink-50 px-4 py-1 text-sm font-medium text-pink-600">
+      Ваш отзыв
+    </span>
+  )}
+</div>
 
             {!isAuthenticated() ? (
               <p className="text-gray-500">
@@ -404,10 +528,10 @@ export default function SalonDetailsPage() {
                 </div>
 
                 {currentUserReview && (
-                  <p className="text-sm text-gray-500">
-                    Вы уже оставляли отзыв. Ниже можно его изменить.
-                  </p>
-                )}
+  <p className="text-sm text-gray-500">
+    Вы уже оставляли отзыв. Здесь можно изменить рейтинг и комментарий.
+  </p>
+)}
 
                 <Button type="submit" className="w-full">
                   {currentUserReview ? "Обновить отзыв" : "Отправить отзыв"}
@@ -416,42 +540,76 @@ export default function SalonDetailsPage() {
             )}
           </Card>
 
-          <Card className="lg:col-span-2">
-            <h2 className="text-2xl font-semibold mb-4">Отзывы клиентов</h2>
+          <Card className="xl:col-span-2">
+  <div className="flex items-center justify-between gap-4 mb-6">
+    <h2 className="text-2xl font-semibold text-gray-900">
+      Отзывы клиентов
+    </h2>
 
-            {reviewsData.reviews.length === 0 ? (
-              <EmptyState
-                title="Пока нет отзывов"
-                description="Станьте первым, кто поделится впечатлением о салоне."
-              />
-            ) : (
-              <div className="space-y-4">
-                {reviewsData.reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="border border-pink-100 rounded-2xl p-4"
-                  >
-                    <div className="flex items-start justify-between gap-4 mb-2">
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {review?.user?.fullName || "Пользователь"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+    <span className="text-sm text-gray-500">
+      {reviewsData.totalReviews} отзывов
+    </span>
+  </div>
 
-                      <StarRating rating={review.rating} size={16} />
-                    </div>
+  {reviewsData.reviews.length === 0 ? (
+    <div className="rounded-3xl border border-dashed border-pink-200 bg-pink-50 p-10 text-center">
+      <p className="text-lg font-medium text-gray-700">
+        Пока нет отзывов
+      </p>
+      <p className="mt-2 text-gray-500">
+        Станьте первым, кто поделится впечатлением о салоне.
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-4">
+      {reviewsData.reviews.map((review) => {
+        const isMine = user && review?.user?.id === user.id;
 
-                    <p className="text-gray-600">
-                      {review.comment || "Без текста"}
-                    </p>
-                  </div>
-                ))}
+        return (
+          <div
+            key={review.id}
+            className={`rounded-3xl border p-5 shadow-sm ${
+              isMine
+                ? "border-pink-200 bg-pink-50"
+                : "border-pink-100 bg-white"
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 text-sm font-bold text-pink-600">
+                {getInitials(review?.user?.fullName)}
               </div>
-            )}
-          </Card>
+
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <p className="font-semibold text-gray-900">
+                    {review?.user?.fullName || "Пользователь"}
+                  </p>
+
+                  {isMine && (
+                    <span className="inline-flex rounded-full border border-pink-200 bg-white px-3 py-1 text-xs font-medium text-pink-600">
+                      Ваш отзыв
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 mb-2">
+                  <StarRating rating={review.rating} size={16} />
+                  <span className="text-sm text-gray-500">
+                    {formatReviewDate(review.createdAt)}
+                  </span>
+                </div>
+
+                <p className="text-gray-700 leading-7">
+                  {review.comment || "Без текста"}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</Card>
         </div>
       </div>
     </div>

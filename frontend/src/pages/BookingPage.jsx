@@ -8,11 +8,15 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import BackButton from "../components/BackButton";
+import { useRef } from "react";
 
 export default function BookingPage() {
   const { salonId } = useParams();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const preselectedSpecialistId = searchParams.get("specialistId");
+  const preselectedServiceId = searchParams.get("serviceId");
+  const navigate = useNavigate();
 
   const [salon, setSalon] = useState(null);
   const [specialistId, setSpecialistId] = useState(
@@ -28,6 +32,7 @@ export default function BookingPage() {
     availableSlots: [],
   });
   const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const timeRef = useRef(null);
 
   useEffect(() => {
     loadSalon();
@@ -45,6 +50,24 @@ export default function BookingPage() {
       setBookingTime("");
     }
   }, [bookingDate, specialistId, salonId]);
+
+  useEffect(() => {
+  if (preselectedSpecialistId) {
+    setSpecialistId(preselectedSpecialistId);
+  }
+
+  if (preselectedServiceId) {
+    setServiceId(preselectedServiceId);
+  }
+}, [preselectedSpecialistId, preselectedServiceId]);
+
+useEffect(() => {
+  if (specialistId && serviceId) {
+    setTimeout(() => {
+      timeRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 200);
+  }
+}, [specialistId, serviceId]);
 
   async function loadSalon() {
     try {
@@ -243,7 +266,7 @@ export default function BookingPage() {
               />
             </div>
 
-            <div>
+            <div ref={timeRef}>
               <label className="block mb-3 font-medium flex items-center gap-2">
                 <Clock3 className="w-4 h-4 text-pink-400" />
                 Время

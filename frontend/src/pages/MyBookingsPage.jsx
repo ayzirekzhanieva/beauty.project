@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Clock3, Sparkles } from "lucide-react";
+import { CalendarDays, Clock3, Sparkles, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import Card from "../components/Card";
@@ -81,10 +81,11 @@ function BookingTabs({ activeTab, setActiveTab, upcomingCount, historyCount }) {
   );
 }
 
-function BookingCard({ booking, onCancel, onRepeat }) {
+function BookingCard({ booking, onCancel, onRepeat, onLeaveReview }) {
   const canCancel =
     booking.status === "PENDING" || booking.status === "CONFIRMED";
   const canRepeat = isPastBooking(booking);
+  const canLeaveReview = booking.status === "COMPLETED";
 
   return (
     <Card className="p-6">
@@ -150,9 +151,44 @@ function BookingCard({ booking, onCancel, onRepeat }) {
               Записаться снова
             </Button>
           )}
+          {canLeaveReview && (
+  <Button
+    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+    onClick={() => onLeaveReview(booking)}
+  >
+    Оставить отзыв
+  </Button>
+)}
         </div>
       </div>
     </Card>
+  );
+}
+
+function RatingStars({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-2">
+      {[1, 2, 3, 4, 5].map((starValue) => {
+        const active = starValue <= value;
+
+        return (
+          <button
+            key={starValue}
+            type="button"
+            onClick={() => onChange(starValue)}
+            className="transition hover:scale-110"
+          >
+            <Star
+              className={`h-8 w-8 ${
+                active
+                  ? "fill-pink-400 text-pink-400"
+                  : "text-pink-200"
+              }`}
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -162,6 +198,14 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
+
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [existingReview, setExistingReview] = useState(null);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
+  const [reviewForm, setReviewForm] = useState({
+  rating: 5,
+  comment: "",
+}); 
 
   useEffect(() => {
     loadBookings();
@@ -191,6 +235,31 @@ export default function MyBookingsPage() {
     }
   }
 
+  async function submitReview(e) {
+  e.preventDefault();
+
+  if (!selectedBookingForReview) return;
+
+  try {
+    const res = await api.post("/reviews", {
+      salonId: selectedBookingForReview.salonId,
+      rating: Number(reviewForm.rating),
+      comment: reviewForm.comment,
+    });
+
+    toast.success(res.data?.message || "Отзыв сохранен");
+    setReviewModalOpen(false);
+    setSelectedBookingForReview(null);
+    setExistingReview(null);
+    setReviewForm({
+      rating: 5,
+      comment: "",
+    });
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка сохранения отзыва");
+  }
+}
+
   function repeatBooking(salonId, specialistId) {
     if (specialistId) {
       navigate(`/booking/${salonId}?specialistId=${specialistId}`);
@@ -198,6 +267,35 @@ export default function MyBookingsPage() {
     }
     navigate(`/booking/${salonId}`);
   }
+
+  async function leaveReview(booking) {
+  try {
+    const res = await api.get(`/reviews/salon/${booking.salonId}`);
+    const reviews = Array.isArray(res.data?.reviews) ? res.data.reviews : [];
+
+    const myReview =
+      reviews.find((review) => review?.user?.id === booking.clientId) || null;
+
+    setSelectedBookingForReview(booking);
+    setExistingReview(myReview);
+
+    if (myReview) {
+      setReviewForm({
+        rating: myReview.rating || 5,
+        comment: myReview.comment || "",
+      });
+    } else {
+      setReviewForm({
+        rating: 5,
+        comment: "",
+      });
+    }
+
+    setReviewModalOpen(true);
+  } catch (error) {
+    toast.error("Не удалось загрузить отзыв");
+  }
+}
 
   const upcomingBookings = useMemo(() => {
     return bookings.filter((booking) => !isPastBooking(booking));
@@ -244,15 +342,96 @@ export default function MyBookingsPage() {
           <div className="grid gap-5">
             {visibleBookings.map((booking) => (
               <BookingCard
-                key={booking.id}
-                booking={booking}
-                onCancel={cancelBooking}
-                onRepeat={repeatBooking}
+               key={booking.id}
+               booking={booking}
+               onCancel={cancelBooking}
+               onRepeat={repeatBooking}
+               onLeaveReview={leaveReview}
               />
             ))}
           </div>
         )}
       </div>
+      {reviewModalOpen && selectedBookingForReview && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          {existingReview ? "Изменить отзыв" : "Оставить отзыв"}
+      </h3>
+
+      <p className="text-gray-500 mb-6">
+        {selectedBookingForReview.salon?.name} —{" "}
+        {selectedBookingForReview.service?.name}
+      </p>
+
+      <form onSubmit={submitReview} className="space-y-4">
+        <div>
+  <label className="block text-sm font-medium text-gray-600 mb-2">
+    Рейтинг
+  </label>
+
+  <RatingStars
+    value={Number(reviewForm.rating)}
+    onChange={(rating) =>
+      setReviewForm({
+        ...reviewForm,
+        rating,
+      })
+    }
+  />
+
+  <p className="mt-2 text-sm text-gray-500">
+    {Number(reviewForm.rating) === 5 && "Отлично"}
+    {Number(reviewForm.rating) === 4 && "Хорошо"}
+    {Number(reviewForm.rating) === 3 && "Нормально"}
+    {Number(reviewForm.rating) === 2 && "Плохо"}
+    {Number(reviewForm.rating) === 1 && "Очень плохо"}
+  </p>
+</div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Комментарий
+          </label>
+          <textarea
+            value={reviewForm.comment}
+            onChange={(e) =>
+              setReviewForm({
+                ...reviewForm,
+                comment: e.target.value,
+              })
+            }
+            className="w-full rounded-2xl border border-pink-200 bg-white p-3 outline-none"
+            rows="4"
+            placeholder="Поделитесь впечатлением"
+          />
+        </div>
+
+        <div className="flex gap-3 justify-end">
+          <Button
+  type="button"
+  onClick={() => {
+    setReviewModalOpen(false);
+    setSelectedBookingForReview(null);
+    setExistingReview(null);
+
+    setReviewForm({
+      rating: 5,
+      comment: "",
+    });
+  }}
+>
+  Отмена
+</Button>
+
+          <Button type="submit">
+            {existingReview ? "Сохранить изменения" : "Отправить отзыв"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }

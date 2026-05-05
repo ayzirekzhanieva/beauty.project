@@ -47,6 +47,20 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "Только клиент может оставлять отзывы" });
     }
 
+    const completedBooking = await prisma.booking.findFirst({
+  where: {
+    clientId: req.user.id,
+    salonId: Number(salonId),
+    status: "COMPLETED",
+  },
+});
+
+if (!completedBooking) {
+  return res.status(403).json({
+    message: "Отзыв можно оставить только после завершенной записи",
+  });
+}
+
     if (!salonId || !rating) {
       return res.status(400).json({ message: "salonId и rating обязательны" });
     }

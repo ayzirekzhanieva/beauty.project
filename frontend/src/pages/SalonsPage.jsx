@@ -27,6 +27,7 @@ export default function SalonsPage() {
   const [sortBy, setSortBy] = useState("DEFAULT");
   const [loading, setLoading] = useState(true);
   const [favoriteSalonIds, setFavoriteSalonIds] = useState([]);
+  const [onlyReviewed, setOnlyReviewed] = useState(false);
 
   useEffect(() => {
     loadSalons();
@@ -116,9 +117,9 @@ export default function SalonsPage() {
       );
     }
 
-    if (sortBy === "AZ") {
-      result.sort((a, b) => a.name.localeCompare(b.name));
-    }
+    if (onlyReviewed) {
+  result = result.filter((salon) => (salon.reviews?.length || 0) > 0);
+}
 
     if (sortBy === "CHEAPEST") {
       result.sort((a, b) => {
@@ -141,7 +142,7 @@ export default function SalonsPage() {
     }
 
     return result;
-  }, [salons, search, priceFilter, sortBy]);
+  }, [salons, search, priceFilter, sortBy, onlyReviewed]);
 
   if (loading) {
     return <LoadingSpinner text="Загружаем салоны..." />;
@@ -182,6 +183,30 @@ export default function SalonsPage() {
         </div>
       </section>
 
+      <section className="px-6 pb-6">
+  <div className="max-w-6xl mx-auto">
+    <div className="bg-white rounded-3xl shadow-md p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Sparkles className="w-5 h-5 text-pink-500" />
+        <h2 className="text-xl font-semibold">Популярные категории</h2>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        {["Маникюр", "Волосы", "Макияж", "Брови", "Уход"].map((category) => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => setSearch(category)}
+            className="rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-medium text-pink-600 transition hover:bg-pink-100"
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
       <section className="px-6 pb-10">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-3xl shadow-md p-5 mb-6">
@@ -190,7 +215,7 @@ export default function SalonsPage() {
               <h2 className="text-xl font-semibold">Фильтры и сортировка</h2>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4"> 
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   Фильтр по цене услуг
@@ -207,6 +232,18 @@ export default function SalonsPage() {
                 </select>
               </div>
 
+              <div className="flex items-end">
+  <label className="flex items-center gap-3 rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 w-full cursor-pointer">
+    <input
+      type="checkbox"
+      checked={onlyReviewed}
+      onChange={(e) => setOnlyReviewed(e.target.checked)}
+      className="w-4 h-4 accent-pink-500"
+    />
+    <span className="text-gray-700 font-medium">Только с отзывами</span>
+  </label>
+</div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   Сортировка
@@ -217,7 +254,6 @@ export default function SalonsPage() {
                   className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
                 >
                   <option value="DEFAULT">По умолчанию</option>
-                  <option value="AZ">A–Z</option>
                   <option value="CHEAPEST">Сначала дешевле</option>
                   <option value="MOST_SERVICES">Больше услуг</option>
                 </select>
@@ -246,15 +282,20 @@ export default function SalonsPage() {
                       ).toFixed(1)
                     : 0;
 
+                const minPrice =
+                  salon.services?.length > 0
+                  ? Math.min(...salon.services.map((service) => Number(service.price)))
+                  : null;    
+
                 return (
                   <Card
-                    key={salon.id}
-                    className="overflow-hidden p-0 hover:shadow-xl transition duration-300 h-full flex flex-col"
-                  >
+                   key={salon.id}
+                   className="overflow-hidden p-0 h-full flex flex-col border border-pink-100 hover:shadow-2xl hover:-translate-y-1 transition duration-300 bg-white"
+                   >
                     <img
                       src={getImageUrl(salon.imageUrl)}
                       alt={salon.name}
-                      className="w-full h-56 object-cover"
+                      className="w-full h-48 object-cover"
                       onError={(e) => {
                         e.currentTarget.src = FALLBACK_SALON_IMAGE;
                       }}
@@ -262,6 +303,19 @@ export default function SalonsPage() {
 
                     <div className="p-5 flex flex-col flex-1">
                       <div className="mb-3">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                              {(salon.reviews?.length || 0) >= 1 && (
+                              <span className="text-xs bg-pink-50 text-pink-600 px-3 py-1 rounded-full border border-pink-100 font-medium">
+                              Есть отзывы
+                             </span>
+                             )}
+
+                               {(salon.services?.length || 0) >= 3 && (
+                               <span className="text-xs bg-white text-gray-700 px-3 py-1 rounded-full border border-pink-100 font-medium">
+                               Топ салон
+                               </span>
+                             )}
+                        </div>
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex items-start gap-2 min-w-0">
                             <Store className="w-5 h-5 text-pink-400 mt-1 shrink-0" />
@@ -288,33 +342,41 @@ export default function SalonsPage() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                          <StarRating rating={Number(avgRating)} size={16} />
-                          <span className="text-sm text-gray-500">
-                            {salon.reviews?.length
-                              ? `${avgRating} (${salon.reviews.length})`
-                              : "Пока нет отзывов"}
-                          </span>
-                        </div>
+  <StarRating rating={Number(avgRating)} size={16} />
+  <span className="text-sm text-gray-500">
+    {salon.reviews?.length
+      ? `${avgRating} • ${salon.reviews.length} отзывов`
+      : "Пока нет отзывов"}
+  </span>
+</div>
                       </div>
 
-                      <p className="text-gray-600 mb-3 line-clamp-2 min-h-[48px]">
+                      <p className="text-gray-600 mb-3 line-clamp-2 min-h-[48px] leading-6">
                         {salon.description || "Описание пока не добавлено"}
                       </p>
 
-                      <div className="flex items-start gap-2 text-gray-500 mb-4 min-h-[28px]">
+                      <div className="flex items-start gap-2 text-gray-500 mb-4 min-h-[28px] text-sm">
                         <MapPin className="w-4 h-4 mt-1 shrink-0" />
                         <span className="break-words">
                           {salon.address || "Адрес не указан"}
                         </span>
                       </div>
 
+                      {minPrice !== null && (
+  <div className="mb-4">
+    <span className="inline-flex items-center rounded-full bg-white border border-pink-100 px-3 py-1 text-sm font-medium text-gray-700">
+      от {minPrice} сом
+    </span>
+  </div>
+)}
+
                       <div className="mb-5">
-                        <p className="font-medium mb-2">Популярные услуги:</p>
+  <p className="font-medium mb-2 text-gray-900">Популярные услуги:</p>
                         <div className="flex flex-wrap gap-2">
                           {(salon.services || []).slice(0, 4).map((service) => (
                             <span
                               key={service.id}
-                              className="text-sm bg-pink-50 text-pink-600 px-3 py-1 rounded-full border border-pink-100"
+                              className="text-sm bg-pink-50 text-pink-600 px-3 py-1 rounded-full border border-pink-100 font-medium"
                             >
                               {service.name}
                             </span>
@@ -322,10 +384,10 @@ export default function SalonsPage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-3 mt-auto pt-2">
+                      <div className="flex gap-3 mt-auto pt-3">
                         <Link to={`/salons/${salon.id}`} className="w-full">
                           <Button className="w-full bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
-                            Подробнее
+                           Подробнее
                           </Button>
                         </Link>
 

@@ -160,6 +160,42 @@ router.post("/:chatId/messages", authMiddleware, async (req, res) => {
       },
     });
 
+    const receiverId =
+  chat.clientId === req.user.id ? chat.ownerId : chat.clientId;
+
+const sender = await prisma.user.findUnique({
+  where: { id: req.user.id },
+  select: {
+    fullName: true,
+    email: true,
+  },
+});
+
+const chatDetails = await prisma.chat.findUnique({
+  where: { id: chatId },
+  include: {
+    salon: {
+      select: {
+        name: true,
+      },
+    },
+  },
+});
+
+await prisma.notification.create({
+  data: {
+    userId: receiverId,
+    title: "Новое сообщение",
+    message: `${
+      sender?.fullName || sender?.email || "Пользователь"
+    } написал(а) вам в чате салона ${
+      chatDetails?.salon?.name || ""
+    }`,
+    type: "CHAT",
+    link: `/chats/${chatId}`,
+  },
+});
+
     res.status(201).json(message);
   } catch (error) {
     console.error("SEND MESSAGE ERROR:", error);

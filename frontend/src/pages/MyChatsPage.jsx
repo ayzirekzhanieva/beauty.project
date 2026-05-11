@@ -4,10 +4,12 @@ import toast from "react-hot-toast";
 import api from "../services/api";
 import Card from "../components/Card";
 import Button from "../components/Button";
+import { getUser } from "../services/auth";
 
 export default function MyChatsPage() {
   const navigate = useNavigate();
   const [chats, setChats] = useState([]);
+  const user = getUser();
 
   useEffect(() => {
     loadChats();
@@ -45,12 +47,24 @@ export default function MyChatsPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
                     <h2 className="text-xl font-semibold">
-                      {chat.salon?.name || "Салон"}
-                    </h2>
+  {user?.role === "OWNER"
+    ? (
+        chat.client?.fullName ||
+        chat.client?.email ||
+        "Клиент"
+      )
+    : (
+        chat.owner?.fullName ||
+        chat.owner?.email ||
+        "Владелец"
+      )}
+</h2>
 
                     <p className="text-gray-500">
-                      Владелец: {chat.owner?.fullName || chat.owner?.email || "—"}
-                    </p>
+  {user?.role === "OWNER"
+    ? `Салон: ${chat.salon?.name || "—"}`
+    : `Салон: ${chat.salon?.name || "—"}`}
+</p>
 
                     <p className="text-sm text-gray-400 mt-2">
                       {chat.messages?.[0]?.text || "Нет сообщений"}

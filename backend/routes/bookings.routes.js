@@ -184,6 +184,26 @@ for (const existingBooking of existingBookings) {
       },
     });
 
+    const salon = await prisma.salon.findUnique({
+  where: { id: Number(salonId) },
+  select: {
+    ownerId: true,
+    name: true,
+  },
+});
+
+if (salon) {
+  await prisma.notification.create({
+    data: {
+      userId: salon.ownerId,
+      title: "Новая запись",
+      message: `Клиент записался в салон ${salon.name}`,
+      type: "BOOKING",
+      link: "/owner-dashboard",
+    },
+  });
+}
+
     res.status(201).json({
       message: "Запись успешно создана",
       booking,

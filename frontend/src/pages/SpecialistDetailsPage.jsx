@@ -32,6 +32,7 @@ export default function SpecialistDetailsPage() {
 
   const [specialist, setSpecialist] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedWorkImage, setSelectedWorkImage] = useState(null);
 
   useEffect(() => {
     loadSpecialist();
@@ -47,6 +48,7 @@ useEffect(() => {
   window.addEventListener("scroll", handleScroll);
   return () => window.removeEventListener("scroll", handleScroll);
 }, []);
+
 
   async function loadSpecialist() {
     try {
@@ -301,13 +303,11 @@ useEffect(() => {
   className="rounded-3xl overflow-hidden border border-pink-100 bg-white hover:shadow-md transition"
 >
                     <img
-                      src={getImageUrl(work.imageUrl)}
-                      alt={work.caption || "Portfolio work"}
-                      className="w-full h-44 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = FALLBACK_SALON_IMAGE;
-                      }}
-                    />
+  src={getImageUrl(work.imageUrl)}
+  alt={work.caption || "Работа мастера"}
+  className="w-full h-64 object-cover cursor-pointer hover:scale-[1.02] transition"
+  onClick={() => setSelectedWorkImage(getImageUrl(work.imageUrl))}
+/>
                     {work.caption && (
                       <div className="p-3">
                         <p className="text-sm text-gray-600">{work.caption}</p>
@@ -320,6 +320,18 @@ useEffect(() => {
           </Card>
         </div>
       </div>
+{selectedWorkImage && (
+  <div
+    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+    onClick={() => setSelectedWorkImage(null)}
+  >
+    <img
+      src={selectedWorkImage}
+      alt="Preview"
+      className="max-w-full max-h-full rounded-3xl shadow-2xl"
+    />
+  </div>
+)}
     </div>
   );
 }

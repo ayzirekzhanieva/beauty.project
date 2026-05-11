@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Sparkles,
-  CircleUserRound,
-  Menu,
-  X,
-} from "lucide-react";
+import {Sparkles,CircleUserRound,Menu,X,Home,CalendarDays,} from "lucide-react";
 import { getUser, isAuthenticated } from "../services/auth";
+import api from "../services/api";
+import { Bell, MessageCircle } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -15,7 +12,7 @@ export default function Navbar() {
 
   const [openMenu, setOpenMenu] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
-
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
   function handleLogout() {
@@ -24,6 +21,25 @@ export default function Navbar() {
     navigate("/login");
     window.location.reload();
   }
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+useEffect(() => {
+  loadUnreadCount();
+
+  const interval = setInterval(loadUnreadCount, 5000);
+
+  return () => clearInterval(interval);
+}, []);
+
+async function loadUnreadCount() {
+  try {
+    const res = await api.get("/notifications/unread-count");
+    setUnreadCount(res.data.count || 0);
+  } catch (error) {
+    setUnreadCount(0);
+  }
+}
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -69,11 +85,11 @@ export default function Navbar() {
 
           <nav className="ml-auto hidden items-center gap-3 lg:flex">
             <Link
-              to="/"
-              className="rounded-2xl px-4 py-2 text-gray-700 transition hover:bg-pink-50"
-            >
-              Главная
-            </Link>
+  to="/"
+  className="flex items-center justify-center w-11 h-11 rounded-full bg-white border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+>
+  <Home className="w-5 h-5 text-pink-500" />
+</Link>
 
             {!loggedIn && (
               <>
@@ -95,22 +111,30 @@ export default function Navbar() {
 
             {loggedIn && user?.role === "CLIENT" && (
               <Link
-                to="/my-bookings"
-                className="rounded-2xl px-4 py-2 text-gray-700 transition hover:bg-pink-50"
-              >
-                Мои записи
-              </Link>
+  to="/my-bookings"
+  className="flex items-center justify-center w-11 h-11 rounded-full bg-white border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+>
+  <CalendarDays className="w-5 h-5 text-pink-500" />
+</Link>
             )}
+            <Link
+  to="/my-chats"
+  className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+>
+  <MessageCircle className="w-5 h-5 text-pink-500" />
+</Link>
+            <Link
+  to="/notifications"
+  className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+>
+  <Bell className="w-5 h-5 text-pink-500" />
 
-            {loggedIn && user?.role === "OWNER" && (
-              <Link
-                to="/owner-dashboard"
-                className="rounded-2xl px-4 py-2 text-gray-700 transition hover:bg-pink-50"
-              >
-                Кабинет
-              </Link>
-            )}
-            <Link to="/my-chats">Мои чаты</Link>
+  {unreadCount > 0 && (
+    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 flex items-center justify-center bg-pink-500 text-white text-[11px] rounded-full font-medium">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  )}
+</Link>
           </nav>
 
           {loggedIn && (
@@ -125,6 +149,18 @@ export default function Navbar() {
 
               {openMenu && (
                 <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-pink-100 bg-white p-2 shadow-xl">
+                  {user?.role === "OWNER" && (
+  <button
+    type="button"
+    onClick={() => {
+      setOpenMenu(false);
+      navigate("/owner-dashboard");
+    }}
+    className="w-full rounded-2xl px-4 py-3 text-left text-gray-700 transition hover:bg-pink-50"
+  >
+    Кабинет
+  </button>
+)}
                   <button
                     type="button"
                     onClick={() => {

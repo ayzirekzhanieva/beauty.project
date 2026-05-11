@@ -18,6 +18,7 @@ import { useLocation } from "react-router-dom";
 import SalonSpecialistsPage from "./pages/SalonSpecialistsPage";
 import ChatPage from "./pages/ChatPage";
 import MyChatsPage from "./pages/MyChatsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 export default function App() {
   const location = useLocation();
@@ -41,6 +42,7 @@ const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
         <Route path="/salons/:id/specialists" element={<SalonSpecialistsPage />} />
         <Route path="/chats/:chatId" element={<ChatPage />} />
         <Route path="/my-chats" element={<MyChatsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
 
         <Route
           path="/my-bookings"

@@ -36,6 +36,7 @@ model User {
   clientChats Chat[] @relation("ClientChats")
   ownerChats  Chat[] @relation("OwnerChats")
   sentMessages Message[] @relation("SentMessages")
+  notifications Notification[]
 }
 
 model Salon {
@@ -192,3 +193,15 @@ model Message {
   chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 }
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+} 

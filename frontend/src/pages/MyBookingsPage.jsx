@@ -315,7 +315,11 @@ export default function MyBookingsPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="mx-auto max-w-6xl">
-        <BackButton />
+        <div className="sticky top-24 z-40 ml-6 mt-4 mb-6 w-fit">
+  <div className="bg-white/90 backdrop-blur rounded-2xl shadow-md border border-pink-100 px-4 py-2">
+    <BackButton />
+  </div>
+</div>
 
         <h1 className="mb-6 text-4xl font-bold text-gray-900">Мои записи</h1>
 

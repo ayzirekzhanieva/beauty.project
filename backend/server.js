@@ -11,6 +11,7 @@ const ownerRoutes = require("./routes/owner.routes");
 const reviewRoutes = require("./routes/reviews.routes");
 const profileRoutes = require("./routes/profile.routes");
 const favoriteRoutes = require("./routes/favorites.routes");
+const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/owner", ownerRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/chats", chatRoutes);
 
 const PORT = process.env.PORT || 5000;
 

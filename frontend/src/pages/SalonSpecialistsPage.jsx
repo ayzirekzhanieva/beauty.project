@@ -21,6 +21,17 @@ export default function SalonSpecialistsPage() {
     loadSalon();
   }, [id]);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+useEffect(() => {
+  function handleScroll() {
+    setIsScrolled(window.scrollY > 120);
+  }
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
   async function loadSalon() {
     try {
       setLoading(true);
@@ -60,7 +71,20 @@ export default function SalonSpecialistsPage() {
     return (
       <div className="min-h-screen bg-pink-50 p-6">
         <div className="max-w-6xl mx-auto">
-          <BackButton />
+         <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
           <EmptyState
             title="Салон не найден"
             description="Попробуйте открыть страницу снова."
@@ -73,7 +97,20 @@ export default function SalonSpecialistsPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-6xl mx-auto">
-        <BackButton />
+        <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
 
         <Card className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">

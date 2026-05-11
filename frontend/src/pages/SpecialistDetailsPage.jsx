@@ -37,6 +37,17 @@ export default function SpecialistDetailsPage() {
     loadSpecialist();
   }, [id]);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+useEffect(() => {
+  function handleScroll() {
+    setIsScrolled(window.scrollY > 120);
+  }
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
   async function loadSpecialist() {
     try {
       setLoading(true);
@@ -59,7 +70,20 @@ export default function SpecialistDetailsPage() {
     return (
       <div className="min-h-screen bg-pink-50 p-6">
         <div className="max-w-6xl mx-auto">
-          <BackButton />
+          <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
           <Card>
             <p className="text-gray-500">Мастер не найден.</p>
           </Card>
@@ -77,7 +101,20 @@ export default function SpecialistDetailsPage() {
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-6xl mx-auto">
-        <BackButton />
+        <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
 
         <Card className="overflow-hidden p-0 mb-8">
   <div className="grid lg:grid-cols-[420px_1fr] gap-0">

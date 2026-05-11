@@ -62,6 +62,17 @@ export default function SalonDetailsPage() {
     loadReviews();
   }, [id]);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+useEffect(() => {
+  function handleScroll() {
+    setIsScrolled(window.scrollY > 120);
+  }
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
   async function loadSalon() {
     try {
       const res = await api.get(`/salons/${id}`);
@@ -92,6 +103,8 @@ export default function SalonDetailsPage() {
 
   const currentUserReview = useMemo(() => {
     if (!user || !Array.isArray(reviewsData.reviews)) return null;
+
+  
 
     return (
       reviewsData.reviews.find(
@@ -138,6 +151,18 @@ export default function SalonDetailsPage() {
     }
   }
 
+  async function handleStartChat() {
+  try {
+    const res = await api.post("/chats/start", {
+      salonId: Number(id),
+    });
+
+    navigate(`/chats/${res.data.id}`);
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Ошибка открытия чата");
+  }
+}
+
   if (!salon) {
     return <LoadingSpinner text="Загрузка салона..." />;
   }
@@ -145,7 +170,20 @@ export default function SalonDetailsPage() {
   return (
     <div className="min-h-screen bg-pink-50 px-4 py-6 sm:px-6">
   <div className="max-w-6xl mx-auto space-y-8">
-        <BackButton />
+        <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
 
         <Card className="overflow-hidden p-0 mb-8">
   <img
@@ -450,6 +488,9 @@ export default function SalonDetailsPage() {
                 >
                   Записаться
                 </Button>
+                <Button onClick={handleStartChat}>
+  Написать
+</Button>
               </div>
             </div>
           </div>

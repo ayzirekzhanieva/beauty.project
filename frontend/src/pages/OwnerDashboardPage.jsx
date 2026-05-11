@@ -9,6 +9,8 @@ import { getUser } from "../services/auth";
 export default function OwnerDashboardPage() {
   const user = getUser();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isSalonModalOpen, setIsSalonModalOpen] = useState(false);
+const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const [dashboard, setDashboard] = useState({
     bookingsCount: 0,
@@ -45,6 +47,7 @@ export default function OwnerDashboardPage() {
   const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
   const [specialistsTab, setSpecialistsTab] = useState("list");
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
 
   const [editSalonForm, setEditSalonForm] = useState({
     name: "",
@@ -104,15 +107,27 @@ const [formWork, setFormWork] = useState({
   image: null,
 });
 
+const [isScrolled, setIsScrolled] = useState(false);
+
+useEffect(() => {
+  function handleScroll() {
+    setIsScrolled(window.scrollY > 120);
+  }
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
 const [formSpecialistService, setFormSpecialistService] = useState({
   specialistId: "",
   serviceId: "",
 });
 
   useEffect(() => {
-    loadDashboard();
-    loadOwnerSalons();
-  }, []);
+  loadDashboard();
+  loadOwnerSalons();
+  loadOwnerChats();
+}, []);
 
   async function loadDashboard() {
     try {
@@ -192,6 +207,7 @@ const [formSpecialistService, setFormSpecialistService] = useState({
       });
 
       toast.success("Услуга добавлена");
+      setIsServiceModalOpen(false);
       setFormService({
         salonId: "",
         name: "",
@@ -218,6 +234,7 @@ const [formSpecialistService, setFormSpecialistService] = useState({
       });
 
       toast.success("Товар добавлен");
+      setIsProductModalOpen(false);
       setFormProduct({
         salonId: "",
         name: "",
@@ -614,11 +631,65 @@ for (let hour = 0; hour < 24; hour++) {
     timeOptions.push(`${hh}:${mm}`);
   }
 }
+const [ownerChats, setOwnerChats] = useState([]);
+const [selectedChatId, setSelectedChatId] = useState(null);
+const [chatMessages, setChatMessages] = useState([]);
+const [chatText, setChatText] = useState("");
+
+async function loadOwnerChats() {
+  try {
+    const res = await api.get("/chats");
+    setOwnerChats(res.data || []);
+  } catch (error) {
+    toast.error("Ошибка загрузки чатов");
+  }
+}
+
+async function openChat(chatId) {
+  try {
+    setSelectedChatId(chatId);
+    const res = await api.get(`/chats/${chatId}/messages`);
+    setChatMessages(res.data || []);
+  } catch (error) {
+    toast.error("Ошибка открытия чата");
+  }
+}
+
+async function sendOwnerMessage(e) {
+  e.preventDefault();
+
+  if (!chatText.trim() || !selectedChatId) return;
+
+  try {
+    const res = await api.post(`/chats/${selectedChatId}/messages`, {
+      text: chatText,
+    });
+
+    setChatMessages((prev) => [...prev, res.data]);
+    setChatText("");
+    loadOwnerChats();
+  } catch (error) {
+    toast.error("Ошибка отправки сообщения");
+  }
+}
 
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <BackButton />
+        <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
         <h1 className="text-3xl font-semibold">
   Кабинет владельца
 </h1>
@@ -627,14 +698,97 @@ for (let hour = 0; hour < 24; hour++) {
   activeTab={activeTab}
   setActiveTab={setActiveTab}
 />
+{activeTab === "specialists" && (
+  <div className="mb-6 mt-6">
+    <div className="flex flex-wrap gap-2 bg-white rounded-3xl p-2 shadow-sm border border-pink-100">
+      {[
+        { key: "list", label: "Список" },
+        { key: "create", label: "Добавить мастера" },
+        { key: "services", label: "Услуги" },
+        { key: "works", label: "Работы" },
+      ].map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          onClick={() => setSpecialistsTab(tab.key)}
+          className={`px-4 py-2 rounded-2xl text-sm font-medium transition ${
+            specialistsTab === tab.key
+              ? "bg-pink-500 text-white"
+              : "bg-white text-gray-600 hover:bg-pink-50"
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+{activeTab === "specialists" && specialistsTab === "list" && (
+  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+    {ownerSalons.flatMap((salon) =>
+      salon.specialists.map((specialist) => (
+        <div
+          key={specialist.id}
+          className="rounded-3xl p-5 bg-white shadow-md hover:shadow-lg transition border border-pink-50"
+        >
+          {specialist.photoUrl && (
+            <img
+              src={`http://localhost:5000${specialist.photoUrl}`}
+              alt={specialist.fullName}
+              className="w-full h-44 object-cover rounded-2xl mb-4"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          )}
+
+          <p className="font-semibold text-lg">{specialist.fullName}</p>
+
+          <p className="text-pink-500 mt-2">
+            {specialist.title || "Специалист"}
+          </p>
+
+          <p className="text-gray-600 mt-2">
+            {specialist.bio || "Без описания"}
+          </p>
+
+          <p className="text-sm text-gray-400 mt-2">
+            Салон: {salon.name}
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 mt-5">
+            <Button onClick={() => startEditSpecialist(specialist)}>
+              Изменить
+            </Button>
+
+            <Button
+              className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+              onClick={() => openDeleteModal("specialist", specialist.id)}
+            >
+              Удалить
+            </Button>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+)}
 {activeTab === "overview" && (
         <div className="grid md:grid-cols-2 gap-6 mb-8 mt-6">
-          <Card>
-            <h2 className="text-xl font-semibold mb-2">Количество записей</h2>
-            <p className="text-4xl font-bold text-pink-500">
-              {dashboard.bookingsCount}
-            </p>
-          </Card>
+          <div
+  onClick={() => setActiveTab("bookings")}
+  className="cursor-pointer"
+>
+  <Card className="hover:shadow-lg transition">
+    <h2 className="text-xl font-semibold mb-2">Количество записей</h2>
+    <p className="text-4xl font-bold text-pink-500">
+      {dashboard.bookingsCount}
+    </p>
+    <p className="text-sm text-gray-500 mt-2">
+      Нажмите, чтобы посмотреть записи
+    </p>
+  </Card>
+</div>
 
           <Card>
             <h2 className="text-xl font-semibold mb-2">Общая сумма продаж</h2>
@@ -647,186 +801,34 @@ for (let hour = 0; hour < 24; hour++) {
         
 {activeTab === "overview" && (
         <div className="grid lg:grid-cols-3 gap-6 mb-8 mt-6">
-          <Card>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Создать салон</h2>
-            <form onSubmit={createSalon} className="space-y-3">
-              <input
-                type="text"
-                name="name"
-                placeholder="Название салона"
-                value={formSalon.name}
-                onChange={handleSalonChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-              <textarea
-                name="description"
-                placeholder="Описание"
-                value={formSalon.description}
-                onChange={handleSalonChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                rows="3"
-              />
-              <input
-                type="text"
-                name="address"
-                placeholder="Адрес"
-                value={formSalon.address}
-                onChange={handleSalonChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-              />
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Фото салона
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    setFormSalon({
-                      ...formSalon,
-                      image: e.target.files?.[0] || null,
-                    })
-                  }
-                  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                />
-              </div>
-              
-              <Button type="submit" className="w-full">
-                Создать салон
-              </Button>
-            </form>
-          </Card>
+          <div className="flex flex-wrap gap-4 mb-8 mt-6">
+  <button
+    onClick={() => setIsSalonModalOpen(true)}
+    className="flex items-center gap-2 bg-white border border-pink-100 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition text-pink-500 font-medium"
+  >
+    <span className="text-2xl leading-none">+</span>
+    <span>Добавить салон</span>
+  </button>
 
-          <Card>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить услугу</h2>
-            <form onSubmit={createService} className="space-y-3">
-              <select
-                name="salonId"
-                value={formService.salonId}
-                onChange={handleServiceChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              >
-                <option value="">Выберите салон</option>
-                {ownerSalons.map((salon) => (
-                  <option key={salon.id} value={salon.id}>
-                    {salon.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Название услуги"
-                value={formService.name}
-                onChange={handleServiceChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <textarea
-                name="description"
-                placeholder="Описание"
-                value={formService.description}
-                onChange={handleServiceChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                rows="3"
-              />
-
-              <input
-                type="number"
-                name="price"
-                placeholder="Цена"
-                value={formService.price}
-                onChange={handleServiceChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <input
-                type="number"
-                name="durationMin"
-                placeholder="Длительность (мин)"
-                value={formService.durationMin}
-                onChange={handleServiceChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <Button type="submit" className="w-full">
-                Добавить услугу
-              </Button>
-            </form>
-          </Card>
-
-          <Card>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить товар</h2>
-            <form onSubmit={createProduct} className="space-y-3">
-              <select
-                name="salonId"
-                value={formProduct.salonId}
-                onChange={handleProductChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              >
-                <option value="">Выберите салон</option>
-                {ownerSalons.map((salon) => (
-                  <option key={salon.id} value={salon.id}>
-                    {salon.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Название товара"
-                value={formProduct.name}
-                onChange={handleProductChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <textarea
-                name="description"
-                placeholder="Описание"
-                value={formProduct.description}
-                onChange={handleProductChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                rows="3"
-              />
-
-              <input
-                type="number"
-                name="price"
-                placeholder="Цена"
-                value={formProduct.price}
-                onChange={handleProductChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <input
-                type="number"
-                name="stock"
-                placeholder="Количество"
-                value={formProduct.stock}
-                onChange={handleProductChange}
-                className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
-                required
-              />
-
-              <Button type="submit" className="w-full">
-                Добавить товар
-              </Button>
-            </form>
-          </Card>
-        </div>
+  <button
+    onClick={() => setIsProductModalOpen(true)}
+    className="flex items-center gap-2 bg-white border border-pink-100 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition text-pink-500 font-medium"
+  >
+    <span className="text-2xl leading-none">+</span>
+    <span>Добавить товар</span>
+  </button>
+  <button
+  onClick={() => setIsServiceModalOpen(true)}
+  className="flex items-center gap-2 bg-white border border-pink-100 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition text-pink-500 font-medium"
+>
+  <span className="text-2xl leading-none">+</span>
+  <span>Добавить услугу</span>
+</button>
+</div>
+          </div>
 )}
 
-{(activeTab === "overview" || activeTab === "specialists") && (
+{activeTab === "salons" && (
         <div className="mb-8 mt-0">
           {ownerSalons.length === 0 ? (
             <p className="text-gray-500">У вас пока нет салонов.</p>
@@ -834,9 +836,9 @@ for (let hour = 0; hour < 24; hour++) {
             <div className="space-y-8">
               {ownerSalons.map((salon) => (
   <div
-    key={salon.id}
-    className="p-2"
-  >
+  key={salon.id}
+  className="bg-white rounded-3xl shadow-md border border-pink-100 p-6 mb-6"
+>
     {editingSalonId === salon.id ? (
       <div className="space-y-4 mb-5 bg-pink-50 border border-pink-100 rounded-3xl p-4">
         <input
@@ -906,11 +908,11 @@ for (let hour = 0; hour < 24; hour++) {
   <>
     {activeTab === "salons" && (
       <>
-        <h3 className="text-2xl font-bold mb-2">{salon.name}</h3>
-        <p className="text-gray-600 mb-2">{salon.description}</p>
-        <p className="text-gray-500 mb-5">{salon.address}</p>
+        <h3 className="text-3xl font-bold text-gray-900 mb-2">{salon.name}</h3>
+        <p className="text-gray-600 text-lg mb-2">{salon.description || "Описание пока не добавлено"}</p>
+        <p className="text-gray-500 mb-5">{salon.address || "Адрес не указан"}</p>
 
-        <div className="flex gap-2 mb-5">
+        <div className="flex flex-wrap gap-3 mt-5">
           <Button onClick={() => startEditSalon(salon)}>
             Изменить Салон
           </Button>
@@ -1183,245 +1185,7 @@ for (let hour = 0; hour < 24; hour++) {
       </div>
     </div>
 )}
-{activeTab === "specialists" && (
-  <div className="mb-6">
-  <div className="mt-2 flex flex-wrap gap-2 bg-white rounded-3xl p-2 shadow-sm border border-pink-100">
-
-    {[
-      { key: "list", label: "Список" },
-      { key: "create", label: "Добавить мастера" },
-      { key: "services", label: "Услуги" },
-      { key: "works", label: "Работы" },
-    ].map((tab) => (
-      <button
-        key={tab.key}
-        type="button"
-        onClick={() => setSpecialistsTab(tab.key)}
-        className={`px-4 py-2 rounded-2xl text-sm font-medium transition ${
-          specialistsTab === tab.key
-            ? "bg-pink-500 text-white"
-            : "bg-white text-gray-600 hover:bg-pink-50"
-        }`}
-      >
-        {tab.label}
-      </button>
-    ))}
-
-  </div>
-</div>
-)}
-  {specialistsTab === "list" && (
-  <div className="mt-8">
-
-    {salon.specialists.length === 0 ? (
-      <div className="border border-dashed border-pink-200 rounded-2xl p-6 text-gray-500 bg-pink-50">
-        Мастеров пока нет
-      </div>
-    ) : (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {salon.specialists.map((specialist) => (
-  <div
-    key={specialist.id}
-    className="rounded-3xl p-5 bg-white shadow-md hover:shadow-lg transition border border-pink-50"
-  >
-    {editingSpecialistId === specialist.id ? (
-      <div className="space-y-4 bg-pink-50 border border-pink-100 rounded-3xl p-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Имя мастера
-          </label>
-          <input
-            type="text"
-            value={editSpecialistForm.fullName}
-            onChange={(e) =>
-              setEditSpecialistForm({
-                ...editSpecialistForm,
-                fullName: e.target.value,
-              })
-            }
-            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-            placeholder="Имя мастера"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Специализация
-          </label>
-          <input
-            type="text"
-            value={editSpecialistForm.title}
-            onChange={(e) =>
-              setEditSpecialistForm({
-                ...editSpecialistForm,
-                title: e.target.value,
-              })
-            }
-            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-            placeholder="Специализация"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Описание
-          </label>
-          <textarea
-            value={editSpecialistForm.bio}
-            onChange={(e) =>
-              setEditSpecialistForm({
-                ...editSpecialistForm,
-                bio: e.target.value,
-              })
-            }
-            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-            rows="3"
-            placeholder="Описание"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Новое фото
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setEditSpecialistForm({
-                ...editSpecialistForm,
-                photo: e.target.files?.[0] || null,
-              })
-            }
-            className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-          />
-        </div>
-        <div>
-  <label className="block text-sm font-medium text-gray-600 mb-2">
-    Начало рабочего дня
-  </label>
-  <select
-    value={editSpecialistForm.workStartTime}
-    onChange={(e) =>
-      setEditSpecialistForm({
-        ...editSpecialistForm,
-        workStartTime: e.target.value,
-      })
-    }
-    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-  >
-    {timeOptions.map((time) => (
-      <option key={time} value={time}>
-        {time}
-      </option>
-    ))}
-  </select>
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-600 mb-2">
-    Конец рабочего дня
-  </label>
-  <select
-    value={editSpecialistForm.workEndTime}
-    onChange={(e) =>
-      setEditSpecialistForm({
-        ...editSpecialistForm,
-        workEndTime: e.target.value,
-      })
-    }
-    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-  >
-    {timeOptions.map((time) => (
-      <option key={time} value={time}>
-        {time}
-      </option>
-    ))}
-  </select>
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-600 mb-2">
-    Рабочие дни
-  </label>
-
-  <div className="flex flex-wrap gap-2">
-    {weekDays.map((day) => {
-      const selectedDays = (editSpecialistForm.workDays || "").split(",");
-      const isSelected = selectedDays.includes(String(day.value));
-
-      return (
-        <button
-          key={day.value}
-          type="button"
-          onClick={() => toggleEditWorkDay(day.value)}
-          className={`px-4 py-2 rounded-2xl border transition ${
-            isSelected
-              ? "bg-pink-500 text-white border-pink-500"
-              : "bg-white text-gray-600 border-pink-200 hover:bg-pink-50"
-          }`}
-        >
-          {day.label}
-        </button>
-      );
-    })}
-  </div>
-</div>
-
-<div className="flex gap-3 mt-6">
-  <Button onClick={() => saveSpecialistEdit(specialist.id)}>
-    Сохранить
-  </Button>
-
-  <Button
-    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-    onClick={() => setEditingSpecialistId(null)}
-  >
-    Отмена
-  </Button>
-</div>
-      </div>
-    ) : (
-      <>
-        {specialist.photoUrl && (
-          <img
-            src={`http://localhost:5000${specialist.photoUrl}`}
-            alt={specialist.fullName}
-            className="w-full h-44 object-cover rounded-2xl mb-4"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        )}
-
-        <p className="font-semibold text-lg">{specialist.fullName}</p>
-        <p className="flex items-center gap-2 text-pink-500 mt-4 mb-4">
-          {specialist.title || "Специалист"}
-        </p>
-        <p className="text-gray-600 mt-2">
-          {specialist.bio || "Без описания"}
-        </p>
-
-        <div className="grid grid-cols-2 gap-3 mt-5">
-          <Button onClick={() => startEditSpecialist(specialist)}>
-            Изменить
-          </Button>
-
-          <Button
-            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-            onClick={() => openDeleteModal("specialist", specialist.id)}
-          >
-            Удалить
-          </Button>
-        </div>
-      </>
-    )}
-  </div>
-))}
-      </div>
-    )}
-  </div>
-  )}
+  
   </div>
 ))}
             </div>
@@ -1437,7 +1201,79 @@ for (let hour = 0; hour < 24; hour++) {
   />
 </Card>
         )}
-        {specialistsTab === "create" && (
+        {activeTab === "chats" && (
+  <Card className="mt-6">
+    <div className="grid md:grid-cols-3 gap-6 min-h-[500px]">
+      <div className="border-r border-pink-100 pr-4">
+        <h2 className="text-2xl font-semibold mb-4">Чаты</h2>
+
+        {ownerChats.length === 0 ? (
+          <p className="text-gray-500">Пока нет сообщений.</p>
+        ) : (
+          <div className="space-y-3">
+            {ownerChats.map((chat) => (
+              <button
+                key={chat.id}
+                type="button"
+                onClick={() => openChat(chat.id)}
+                className={`w-full text-left rounded-2xl p-4 border transition ${
+                  selectedChatId === chat.id
+                    ? "bg-pink-50 border-pink-300"
+                    : "bg-white border-pink-100 hover:bg-pink-50"
+                }`}
+              >
+                <p className="font-semibold text-gray-900">
+                  {chat.client?.fullName || chat.client?.email || "Клиент"}
+                </p>
+                <p className="text-sm text-gray-500">{chat.salon?.name}</p>
+                <p className="text-sm text-gray-400 mt-1 line-clamp-1">
+                  {chat.messages?.[0]?.text || "Нет сообщений"}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="md:col-span-2 flex flex-col">
+        {!selectedChatId ? (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Выберите чат слева
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className="rounded-2xl bg-pink-50 px-4 py-3"
+                >
+                  <p className="text-xs text-gray-500 mb-1">
+                    {message.sender?.fullName || "Пользователь"}
+                  </p>
+                  <p className="text-gray-800">{message.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={sendOwnerMessage} className="flex gap-3">
+              <input
+                type="text"
+                value={chatText}
+                onChange={(e) => setChatText(e.target.value)}
+                placeholder="Введите сообщение"
+                className="flex-1 p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+              />
+
+              <Button type="submit">Отправить</Button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  </Card>
+)}
+        {activeTab === "specialists" && specialistsTab === "create" && (
 <Card className="mb-8">
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">Добавить мастера</h2>
 
@@ -1557,7 +1393,7 @@ for (let hour = 0; hour < 24; hour++) {
   </form>
 </Card>
         )}
-{specialistsTab === "services" && (
+{activeTab === "specialists" && specialistsTab === "services" && (
 <Card className="mb-8">
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Привязать услугу к мастеру
@@ -1604,7 +1440,7 @@ for (let hour = 0; hour < 24; hour++) {
   </form>
 </Card>
 )}
-{specialistsTab === "works" && (
+{activeTab === "specialists" && specialistsTab === "works" && (
 <Card className="mb-8">
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Добавить работу мастера
@@ -1657,6 +1493,222 @@ for (let hour = 0; hour < 24; hour++) {
 </Card>
 )}
 
+{isSalonModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6">
+      <h3 className="text-2xl font-bold mb-4">Создать салон</h3>
+
+      <form onSubmit={createSalon} className="space-y-3">
+        <input
+          type="text"
+          name="name"
+          placeholder="Название салона"
+          value={formSalon.name}
+          onChange={handleSalonChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          required
+        />
+
+        <textarea
+          name="description"
+          placeholder="Описание"
+          value={formSalon.description}
+          onChange={handleSalonChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          rows="3"
+        />
+
+        <input
+          type="text"
+          name="address"
+          placeholder="Адрес"
+          value={formSalon.address}
+          onChange={handleSalonChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+        />
+
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) =>
+            setFormSalon({
+              ...formSalon,
+              image: e.target.files?.[0] || null,
+            })
+          }
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+        />
+
+        <div className="flex justify-end gap-3 pt-3">
+          <Button
+            type="button"
+            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            onClick={() => setIsSalonModalOpen(false)}
+          >
+            Отмена
+          </Button>
+
+          <Button type="submit">Создать</Button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+{isProductModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6">
+      <h3 className="text-2xl font-bold mb-4">Добавить товар</h3>
+
+      <form onSubmit={createProduct} className="space-y-3">
+        <select
+          name="salonId"
+          value={formProduct.salonId}
+          onChange={handleProductChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+          required
+        >
+          <option value="">Выберите салон</option>
+          {ownerSalons.map((salon) => (
+            <option key={salon.id} value={salon.id}>
+              {salon.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          name="name"
+          placeholder="Название товара"
+          value={formProduct.name}
+          onChange={handleProductChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          required
+        />
+
+        <textarea
+          name="description"
+          placeholder="Описание"
+          value={formProduct.description}
+          onChange={handleProductChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          rows="3"
+        />
+
+        <input
+          type="number"
+          name="price"
+          placeholder="Цена"
+          value={formProduct.price}
+          onChange={handleProductChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          required
+        />
+
+        <input
+          type="number"
+          name="stock"
+          placeholder="Количество"
+          value={formProduct.stock}
+          onChange={handleProductChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          required
+        />
+
+        <div className="flex justify-end gap-3 pt-3">
+          <Button
+            type="button"
+            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            onClick={() => setIsProductModalOpen(false)}
+          >
+            Отмена
+          </Button>
+
+          <Button type="submit">Добавить</Button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+{isServiceModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl p-6">
+      <h3 className="text-2xl font-bold mb-4">Добавить услугу</h3>
+
+      <form onSubmit={createService} className="space-y-3">
+        <select
+          name="salonId"
+          value={formService.salonId}
+          onChange={handleServiceChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
+          required
+        >
+          <option value="">Выберите салон</option>
+
+          {ownerSalons.map((salon) => (
+            <option key={salon.id} value={salon.id}>
+              {salon.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          name="name"
+          placeholder="Название услуги"
+          value={formService.name}
+          onChange={handleServiceChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          required
+        />
+
+        <textarea
+          name="description"
+          placeholder="Описание"
+          value={formService.description}
+          onChange={handleServiceChange}
+          className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+          rows="3"
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            name="price"
+            placeholder="Цена"
+            value={formService.price}
+            onChange={handleServiceChange}
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+            required
+          />
+
+          <input
+            type="number"
+            name="durationMinutes"
+            placeholder="Длительность"
+            value={formService.durationMinutes}
+            onChange={handleServiceChange}
+            className="w-full p-3 rounded-2xl border border-pink-200 outline-none"
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-3">
+          <Button
+            type="button"
+            className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            onClick={() => setIsServiceModalOpen(false)}
+          >
+            Отмена
+          </Button>
+
+          <Button type="submit">Добавить</Button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
         {confirmState.isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6">
@@ -1690,8 +1742,10 @@ for (let hour = 0; hour < 24; hour++) {
   function OwnerTabs({ activeTab, setActiveTab }) {
   const tabs = [
     { key: "overview", label: "Обзор" },
+    { key: "salons", label: "Мои салоны" },
     { key: "specialists", label: "Мастера" },
     { key: "bookings", label: "Записи" },
+    { key: "chats", label: "Чаты" },
   ];
 
   return (
@@ -1701,7 +1755,13 @@ for (let hour = 0; hour < 24; hour++) {
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => {
+  setActiveTab(tab.key);
+
+  if (tab.key === "specialists") {
+    setSpecialistsTab("list");
+  }
+}}
             className={`px-5 py-3 rounded-2xl font-medium transition ${
               activeTab === tab.key
                 ? "bg-pink-500 text-white shadow-sm"

@@ -33,6 +33,9 @@ model User {
   bookings  Booking[]  @relation("ClientBookings")
   reviews   Review[]
   favorites Favorite[]
+  clientChats Chat[] @relation("ClientChats")
+  ownerChats  Chat[] @relation("OwnerChats")
+  sentMessages Message[] @relation("SentMessages")
 }
 
 model Salon {
@@ -51,6 +54,7 @@ model Salon {
   reviews     Review[]
   favorites   Favorite[]
   specialists Specialist[]
+  chats       Chat[]
 }
 
 model Service {
@@ -161,4 +165,30 @@ model SpecialistService {
   service    Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@unique([specialistId, serviceId])
+}
+model Chat {
+  id        Int      @id @default(autoincrement())
+  clientId  Int
+  ownerId   Int
+  salonId   Int
+  createdAt DateTime @default(now())
+
+  client User  @relation("ClientChats", fields: [clientId], references: [id], onDelete: Cascade)
+  owner  User  @relation("OwnerChats", fields: [ownerId], references: [id], onDelete: Cascade)
+  salon  Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([clientId, ownerId, salonId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  senderId  Int
+  text      String
+  createdAt DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 }

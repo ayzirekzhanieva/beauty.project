@@ -27,6 +27,7 @@ function formatDate(dateString) {
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const [nameForm, setNameForm] = useState({
     fullName: "",
@@ -40,6 +41,17 @@ export default function ProfilePage() {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  const [isScrolled, setIsScrolled] = useState(false);
+
+useEffect(() => {
+  function handleScroll() {
+    setIsScrolled(window.scrollY > 120);
+  }
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
 
   async function loadProfile() {
     try {
@@ -73,6 +85,26 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleDeleteAccount() {
+  try {
+    await api.delete("/auth/me");
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    toast.success("Аккаунт удалён");
+
+    setIsDeleteModalOpen(false);
+
+    window.location.href = "/register";
+  } catch (error) {
+    console.error("DELETE ACCOUNT ERROR:", error);
+
+    toast.error(
+      error.response?.data?.message || "Ошибка удаления аккаунта"
+    );
+  }
+}
   async function changePassword(e) {
     e.preventDefault();
 
@@ -96,7 +128,20 @@ export default function ProfilePage() {
 return (
   <div className="min-h-screen bg-pink-50 p-6">
     <div className="mx-auto max-w-6xl">
-      <BackButton />
+      <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
+  <button
+    type="button"
+    onClick={() => window.history.back()}
+    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+      isScrolled
+        ? "w-11 h-11 rounded-full text-2xl"
+        : "px-4 py-2 rounded-2xl gap-2 text-lg"
+    }`}
+  >
+    <span>←</span>
+    {!isScrolled && <span>Назад</span>}
+  </button>
+</div>
 
       <h1 className="mb-6 text-4xl font-bold text-gray-900">
         Настройки аккаунта
@@ -225,10 +270,49 @@ return (
             <Button onClick={changePassword}>
               Сменить пароль
             </Button>
+
+          <button
+  type="button"
+  onClick={() => {
+    setIsDeleteModalOpen(true);
+  }}
+  className="px-5 py-3 rounded-2xl bg-white text-red-500 border border-red-200 hover:bg-red-50 transition"
+>
+  Удалить аккаунт
+</button>
           </div>
         </Card>
       </div>
     </div>
+    {isDeleteModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6">
+      <h3 className="text-2xl font-bold mb-3 text-pink-500">
+        Удалить аккаунт?
+      </h3>
+
+      <p className="text-gray-600 mb-6">
+        Это действие нельзя отменить. Все данные будут удалены.
+      </p>
+
+      <div className="flex justify-end gap-3">
+        <Button
+          className="bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+          onClick={() => setIsDeleteModalOpen(false)}
+        >
+          Отмена
+        </Button>
+
+        <Button
+  className="bg-pink-500 text-white hover:bg-pink-600"
+  onClick={handleDeleteAccount}
+>
+  Удалить
+</Button>
+      </div>
+    </div>
+  </div>
+)}
   </div>
 );
 }

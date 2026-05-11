@@ -110,6 +110,7 @@ export default function Navbar() {
                 Кабинет
               </Link>
             )}
+            <Link to="/my-chats">Мои чаты</Link>
           </nav>
 
           {loggedIn && (

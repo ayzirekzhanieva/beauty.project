@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
 const { sendResetPasswordEmail } = require("../services/mail.service");
+const { authMiddleware } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -201,4 +202,18 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
+router.delete("/me", authMiddleware, async (req, res) => {
+  try {
+    await prisma.user.delete({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    res.json({ message: "Аккаунт удалён" });
+  } catch (error) {
+    console.error("DELETE ACCOUNT ERROR:", error);
+    res.status(500).json({ message: "Ошибка удаления аккаунта" });
+  }
+});
 module.exports = router;

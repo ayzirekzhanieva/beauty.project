@@ -48,12 +48,12 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-4xl mx-auto">
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="mb-4 px-4 py-2 rounded-2xl bg-white text-pink-500 border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+          className="mb-4 px-4 py-2 rounded-2xl bg-white text-[#ee8585] border border-[#fdeae5] shadow-sm hover:bg-[#fff7f5] transition"
         >
           ← Назад
         </button>
@@ -79,8 +79,8 @@ export default function NotificationsPage() {
                 onClick={() => openNotification(notification)}
                 className={`w-full text-left rounded-3xl p-5 shadow-sm border transition ${
                   notification.isRead
-                    ? "bg-white border-pink-100"
-                    : "bg-pink-50 border-pink-300"
+                    ? "bg-white border-[#fdeae5]"
+                    : "bg-[#fff7f5] border-pink-300"
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -99,7 +99,7 @@ export default function NotificationsPage() {
                   </div>
 
                   {!notification.isRead && (
-                    <span className="rounded-full bg-pink-500 text-white text-xs px-3 py-1">
+                    <span className="rounded-full bg-[#ee8585] text-white text-xs px-3 py-1">
                       Новое
                     </span>
                   )}

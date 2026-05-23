@@ -69,13 +69,13 @@ useEffect(() => {
 
   if (!salon) {
     return (
-      <div className="min-h-screen bg-pink-50 p-6">
+      <div className="min-h-screen bg-[#fff7f5] p-6">
         <div className="max-w-6xl mx-auto">
          <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -95,13 +95,13 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-6xl mx-auto">
         <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -115,7 +115,7 @@ useEffect(() => {
         <Card className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <p className="text-pink-500 font-medium mb-2">Команда салона</p>
+              <p className="text-[#ee8585] font-medium mb-2">Команда салона</p>
               <h1 className="text-4xl font-bold text-gray-900">
                 Мастера — {salon.name}
               </h1>
@@ -125,7 +125,7 @@ useEffect(() => {
             </div>
 
             <Link to={`/salons/${salon.id}`}>
-              <Button className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+              <Button className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]">
                 Вернуться к салону
               </Button>
             </Link>
@@ -161,7 +161,7 @@ useEffect(() => {
                 return (
                   <div
                     key={specialist.id}
-                    className="overflow-hidden rounded-3xl border border-pink-100 bg-white shadow-sm hover:shadow-lg transition flex flex-col"
+                    className="overflow-hidden rounded-3xl border border-[#fdeae5] bg-white shadow-sm hover:shadow-lg transition flex flex-col"
                   >
                     <img
                       src={getImageUrl(specialist.photoUrl)}
@@ -178,7 +178,7 @@ useEffect(() => {
                           {specialist.fullName}
                         </h3>
 
-                        <p className="text-pink-500 font-medium mt-1">
+                        <p className="text-[#ee8585] font-medium mt-1">
                           {specialist.title || "Специалист"}
                         </p>
                       </div>
@@ -189,7 +189,7 @@ useEffect(() => {
 
                       <div className="grid grid-cols-2 gap-3 mt-auto">
                         <Button
-                          className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+                          className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
                           onClick={() => navigate(`/specialists/${specialist.id}`)}
                         >
                           Подробнее

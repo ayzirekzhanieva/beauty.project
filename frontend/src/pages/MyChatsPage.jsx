@@ -25,12 +25,12 @@ export default function MyChatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-4xl mx-auto">
         <button
   type="button"
   onClick={() => window.history.back()}
-  className="mb-4 px-4 py-2 rounded-2xl bg-white text-pink-500 border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+  className="mb-4 px-4 py-2 rounded-2xl bg-white text-[#ee8585] border border-[#fdeae5] shadow-sm hover:bg-[#fff7f5] transition"
 >
   ← Назад
 </button>

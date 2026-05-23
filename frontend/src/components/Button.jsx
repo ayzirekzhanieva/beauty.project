@@ -12,10 +12,10 @@ export default function Button({
     className.includes("bg-white") || className.includes("border");
 
   const secondaryStyles =
-    "bg-white text-pink-500 border border-pink-300 hover:bg-pink-50";
+    "bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]";
 
   const primaryStyles =
-    "bg-pink-500 text-white hover:bg-pink-600";
+    "bg-[#ee8585] text-white hover:bg-[#ee8585]";
 
   return (
     <button

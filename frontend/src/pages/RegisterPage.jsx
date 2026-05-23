@@ -40,7 +40,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-md mx-auto">
         <Card>
           <h1 className="text-3xl font-bold mb-6 text-center">Регистрация</h1>
@@ -102,7 +102,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-gray-600 mt-4">
             Уже есть аккаунт?{" "}
-            <Link to="/login" className="text-pink-500 font-medium">
+            <Link to="/login" className="text-[#ee8585] font-medium">
               Войти
             </Link>
           </p>

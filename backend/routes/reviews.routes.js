@@ -18,14 +18,21 @@ router.get("/salon/:salonId", async (req, res) => {
             fullName: true,
           },
         },
+        specialist: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
     });
 
     const avg = reviews.length
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviews.length
       : 0;
 
     res.json({
@@ -41,32 +48,38 @@ router.get("/salon/:salonId", async (req, res) => {
 
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { salonId, rating, comment } = req.body;
+    const { salonId, specialistId, rating, comment } = req.body;
 
     if (req.user.role !== "CLIENT") {
-      return res.status(403).json({ message: "Только клиент может оставлять отзывы" });
+      return res.status(403).json({
+        message: "Только клиент может оставлять отзывы",
+      });
     }
 
-    const completedBooking = await prisma.booking.findFirst({
-  where: {
-    clientId: req.user.id,
-    salonId: Number(salonId),
-    status: "COMPLETED",
-  },
-});
-
-if (!completedBooking) {
-  return res.status(403).json({
-    message: "Отзыв можно оставить только после завершенной записи",
-  });
-}
-
     if (!salonId || !rating) {
-      return res.status(400).json({ message: "salonId и rating обязательны" });
+      return res.status(400).json({
+        message: "salonId и rating обязательны",
+      });
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "Рейтинг должен быть от 1 до 5" });
+      return res.status(400).json({
+        message: "Рейтинг должен быть от 1 до 5",
+      });
+    }
+
+    const completedBooking = await prisma.booking.findFirst({
+      where: {
+        clientId: req.user.id,
+        salonId: Number(salonId),
+        status: "COMPLETED",
+      },
+    });
+
+    if (!completedBooking) {
+      return res.status(403).json({
+        message: "Отзыв можно оставить только после завершенной записи",
+      });
     }
 
     const existingReview = await prisma.review.findUnique({
@@ -74,14 +87,6 @@ if (!completedBooking) {
         userId_salonId: {
           userId: req.user.id,
           salonId: Number(salonId),
-        },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-          },
         },
       },
     });
@@ -97,9 +102,16 @@ if (!completedBooking) {
         data: {
           rating: Number(rating),
           comment: comment || "",
+          specialistId: specialistId ? Number(specialistId) : null,
         },
         include: {
           user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+          specialist: {
             select: {
               id: true,
               fullName: true,
@@ -117,12 +129,19 @@ if (!completedBooking) {
     const review = await prisma.review.create({
       data: {
         salonId: Number(salonId),
+        specialistId: specialistId ? Number(specialistId) : null,
         userId: req.user.id,
         rating: Number(rating),
         comment: comment || "",
       },
       include: {
         user: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        specialist: {
           select: {
             id: true,
             fullName: true,
@@ -140,4 +159,5 @@ if (!completedBooking) {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });
+
 module.exports = router;

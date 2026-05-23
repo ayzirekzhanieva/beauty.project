@@ -24,10 +24,16 @@ export default function SalonsPage() {
   const [salons, setSalons] = useState([]);
   const [search, setSearch] = useState("");
   const [priceFilter, setPriceFilter] = useState("ALL");
+  const [minPriceFilter, setMinPriceFilter] = useState("");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [sortBy, setSortBy] = useState("DEFAULT");
   const [loading, setLoading] = useState(true);
   const [favoriteSalonIds, setFavoriteSalonIds] = useState([]);
   const [onlyReviewed, setOnlyReviewed] = useState(false);
+  const [customPrice, setCustomPrice] = useState("");
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+
 
   useEffect(() => {
     loadSalons();
@@ -94,28 +100,66 @@ export default function SalonsPage() {
 
   const filteredSalons = useMemo(() => {
     let result = [...salons];
-
     if (search.trim()) {
-      const query = search.toLowerCase();
+  const query = search.toLowerCase().trim();
 
-      result = result.filter((salon) => {
-        const salonNameMatch = salon.name?.toLowerCase().includes(query);
+  result = result.filter((salon) => {
+    const text = `
+      ${salon.name || ""}
+      ${salon.description || ""}
+      ${salon.address || ""}
+      ${(salon.services || []).map((s) => s.name).join(" ")}
+    `.toLowerCase();
 
-        const serviceNameMatch = (salon.services || []).some((service) =>
-          service.name?.toLowerCase().includes(query)
-        );
+    return text.includes(query);
+  });
+}
+    if (selectedCategory) {
+  result = result.filter((salon) => {
+    const text = `
+      ${salon.name || ""}
+      ${salon.description || ""}
+      ${(salon.services || []).map((s) => s.name).join(" ")}
+    `.toLowerCase();
 
-        return salonNameMatch || serviceNameMatch;
-      });
-    }
+    return text.includes(selectedCategory.toLowerCase());
+  });
+}
 
-    if (priceFilter !== "ALL") {
-      const maxPrice = Number(priceFilter);
+    const minPriceValue = minPriceFilter ? Number(minPriceFilter) : null;
+const maxPriceValue =
+  maxPriceFilter
+    ? Number(maxPriceFilter)
+    : priceFilter !== "ALL"
+    ? Number(priceFilter)
+    : null;
 
-      result = result.filter((salon) =>
-        (salon.services || []).some((service) => Number(service.price) <= maxPrice)
-      );
-    }
+if (minPriceValue !== null || maxPriceValue !== null) {
+  result = result.filter((salon) =>
+    (salon.services || []).some((service) => {
+      const price = Number(service.price);
+
+      const matchesMin =
+        minPriceValue === null || price >= minPriceValue;
+
+      const matchesMax =
+        maxPriceValue === null || price <= maxPriceValue;
+
+      return matchesMin && matchesMax;
+    })
+  );
+}
+
+    const activeMaxPrice =
+  customPrice !== "" ? Number(customPrice) : priceFilter !== "ALL" ? Number(priceFilter) : null;
+
+if (activeMaxPrice) {
+  result = result.filter((salon) =>
+    (salon.services || []).some(
+      (service) => Number(service.price) <= activeMaxPrice
+    )
+  );
+}
 
     if (onlyReviewed) {
   result = result.filter((salon) => (salon.reviews?.length || 0) > 0);
@@ -137,272 +181,441 @@ export default function SalonsPage() {
       });
     }
 
+    if (sortBy === "EXPENSIVE") {
+  result.sort((a, b) => {
+    const aMax =
+      a.services?.length > 0
+        ? Math.max(...a.services.map((service) => Number(service.price)))
+        : 0;
+
+    const bMax =
+      b.services?.length > 0
+        ? Math.max(...b.services.map((service) => Number(service.price)))
+        : 0;
+
+    return bMax - aMax;
+  });
+}
+
+if (sortBy === "MOST_REVIEWS") {
+  result.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
+}
+
+if (sortBy === "BEST_RATING") {
+  result.sort((a, b) => {
+    const aRating =
+      a.reviews?.length > 0
+        ? a.reviews.reduce((sum, review) => sum + review.rating, 0) /
+          a.reviews.length
+        : 0;
+
+    const bRating =
+      b.reviews?.length > 0
+        ? b.reviews.reduce((sum, review) => sum + review.rating, 0) /
+          b.reviews.length
+        : 0;
+
+    return bRating - aRating;
+  });
+}
+
+if (sortBy === "NAME_ASC") {
+  result.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+if (sortBy === "NAME_DESC") {
+  result.sort((a, b) => b.name.localeCompare(a.name));
+}
+
     if (sortBy === "MOST_SERVICES") {
       result.sort((a, b) => (b.services?.length || 0) - (a.services?.length || 0));
     }
 
     return result;
-  }, [salons, search, priceFilter, sortBy, onlyReviewed]);
+}, [salons, search, selectedCategory, priceFilter, minPriceFilter, maxPriceFilter, sortBy, onlyReviewed]);
 
   if (loading) {
     return <LoadingSpinner text="Загружаем салоны..." />;
   }
 
   return (
-    <div className="min-h-screen bg-pink-50">
-      <section className="px-6 pt-10 pb-6">
-        <div className="max-w-6xl mx-auto bg-gradient-to-r from-pink-100 via-pink-50 to-white rounded-[32px] p-8 md:p-12 shadow-md">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-6">
-              <Sparkles className="w-4 h-4 text-pink-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Soft Pink Minimalism
-              </span>
-            </div>
+    <div className="min-h-screen bg-[#fff7f5]">
+      <section className="px-6 pt-8 pb-4">
+  <div className="max-w-6xl mx-auto bg-white rounded-3xl p-6 shadow-sm border border-[#fdeae5]">
+    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+      Найди beauty salon рядом
+    </h1>
 
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight mb-5">
-              Найди свой любимый beauty salon в пару кликов
-            </h1>
+    <p className="text-gray-500 mb-5">
+      Салоны, услуги, мастера и запись онлайн.
+    </p>
 
-            <p className="text-lg text-gray-600 mb-8">
-              Записывайся на услуги, изучай товары салонов и управляй бронированиями
-              в одном красивом маркетплейсе.
-            </p>
-
-            <div className="bg-white rounded-3xl shadow-md px-6 py-4 flex items-center gap-4">
-              <Search className="w-5 h-5 text-pink-400" />
-              <input
-                type="text"
-                placeholder="Поиск салонов или услуг..."
-                className="w-full outline-none text-lg bg-transparent"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 pb-6">
-  <div className="max-w-6xl mx-auto">
-    <div className="bg-white rounded-3xl shadow-md p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-pink-500" />
-        <h2 className="text-xl font-semibold">Популярные категории</h2>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        {["Маникюр", "Волосы", "Макияж", "Брови", "Уход"].map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => setSearch(category)}
-            className="rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-medium text-pink-600 transition hover:bg-pink-100"
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+    <div className="bg-[#fff7f5] rounded-2xl px-5 py-3 flex items-center gap-3 border border-[#fdeae5]">
+      <Search className="w-5 h-5 text-pink-400" />
+      <input
+        type="text"
+        placeholder="Поиск салонов или услуг..."
+        className="w-full outline-none bg-transparent"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
     </div>
   </div>
 </section>
 
       <section className="px-6 pb-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-md p-5 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <SlidersHorizontal className="w-5 h-5 text-pink-500" />
-              <h2 className="text-xl font-semibold">Фильтры и сортировка</h2>
-            </div>
+  <div className="max-w-6xl mx-auto grid lg:grid-cols-[260px_1fr] gap-6">
+    <aside className="hidden lg:block sticky top-24 self-start max-h-[calc(100vh-120px)] overflow-y-auto bg-white rounded-3xl shadow-md border border-[#fdeae5] p-5">
+      <h2 className="text-xl font-bold text-gray-900 mb-5">Фильтры</h2>
 
-            <div className="grid md:grid-cols-3 gap-4"> 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Фильтр по цене услуг
-                </label>
-                <select
-                  value={priceFilter}
-                  onChange={(e) => setPriceFilter(e.target.value)}
-                  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                >
-                  <option value="ALL">Все цены</option>
-                  <option value="20">До 20 сом</option>
-                  <option value="30">До 30 сом</option>
-                  <option value="50">До 50 сом</option>
-                </select>
-              </div>
+      <div className="mb-6">
+  <h3 className="font-semibold text-gray-800 mb-3">
+    Популярные категории
+  </h3>
 
-              <div className="flex items-end">
-  <label className="flex items-center gap-3 rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 w-full cursor-pointer">
-    <input
-      type="checkbox"
-      checked={onlyReviewed}
-      onChange={(e) => setOnlyReviewed(e.target.checked)}
-      className="w-4 h-4 accent-pink-500"
-    />
-    <span className="text-gray-700 font-medium">Только с отзывами</span>
-  </label>
+  <div className="flex flex-col gap-2">
+    {["Маникюр", "Волосы", "Макияж", "Брови", "Уход"].map((category) => (
+      <button
+        key={category}
+        type="button"
+        onClick={() =>
+  setSelectedCategory(selectedCategory === category ? "" : category)
+}
+        className={`text-left rounded-2xl border px-4 py-2 text-sm font-medium transition ${
+  selectedCategory === category
+    ? "bg-[#ee8585] text-white border-[#ee8585]"
+    : "bg-[#fff7f5] text-[#ee8585] border-[#fdeae5] hover:bg-pink-100"
+}`}
+      >
+        {category}
+      </button>
+    ))}
+  </div>
 </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Сортировка
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                >
-                  <option value="DEFAULT">По умолчанию</option>
-                  <option value="CHEAPEST">Сначала дешевле</option>
-                  <option value="MOST_SERVICES">Больше услуг</option>
-                </select>
-              </div>
-            </div>
-          </div>
+      <div className="space-y-6">
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Цена</h3>
 
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Салоны красоты</h2>
-            <p className="text-gray-500">Найдено: {filteredSalons.length}</p>
-          </div>
+          <select
+            value={priceFilter}
+            onChange={(e) => setPriceFilter(e.target.value)}
+            className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+          >
+            <option value="ALL">Все цены</option>
+            <option value="20">До 2000 сом</option>
+            <option value="30">До 3000 сом</option>
+            <option value="50">До 5000 сом</option>
+          </select>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+  <input
+    type="number"
+    value={minPriceFilter}
+    onChange={(e) => setMinPriceFilter(e.target.value)}
+    placeholder="от"
+    className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+  />
 
-          {filteredSalons.length === 0 ? (
-            <EmptyState
-              title="Ничего не найдено"
-              description="Попробуйте изменить поисковый запрос или фильтры."
+  <input
+    type="number"
+    value={maxPriceFilter}
+    onChange={(e) => setMaxPriceFilter(e.target.value)}
+    placeholder="до"
+    className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+  />
+</div>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Отзывы</h3>
+
+          <label className="flex items-center gap-3 text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={onlyReviewed}
+              onChange={(e) => setOnlyReviewed(e.target.checked)}
+              className="w-4 h-4 accent-pink-500"
             />
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredSalons.map((salon) => {
-                const avgRating =
-                  salon.reviews?.length > 0
-                    ? (
-                        salon.reviews.reduce((sum, review) => sum + review.rating, 0) /
-                        salon.reviews.length
-                      ).toFixed(1)
-                    : 0;
+            Только с отзывами
+          </label>
+        </div>
 
-                const minPrice =
-                  salon.services?.length > 0
-                  ? Math.min(...salon.services.map((service) => Number(service.price)))
-                  : null;    
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Сортировка</h3>
 
-                return (
-                  <Card
-                   key={salon.id}
-                   className="overflow-hidden p-0 h-full flex flex-col border border-pink-100 hover:shadow-2xl hover:-translate-y-1 transition duration-300 bg-white"
-                   >
-                    <img
-                      src={getImageUrl(salon.imageUrl)}
-                      alt={salon.name}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = FALLBACK_SALON_IMAGE;
-                      }}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+          >
+            <option value="DEFAULT">По умолчанию</option>
+            <option value="CHEAPEST">Сначала дешевле</option>
+            <option value="EXPENSIVE">Сначала дороже</option>
+            <option value="MOST_SERVICES">Больше услуг</option>
+            <option value="MOST_REVIEWS">Больше отзывов</option>
+<option value="BEST_RATING">Лучший рейтинг</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSearch("");
+            setSelectedCategory("");
+            setPriceFilter("ALL");
+            setMinPriceFilter("");
+            setMaxPriceFilter("");
+            setOnlyReviewed(false);
+            setSortBy("DEFAULT");
+          }}
+          className="w-full rounded-2xl border border-pink-200 bg-[#fff7f5] px-4 py-3 text-[#ee8585] font-medium hover:bg-pink-100 transition"
+        >
+          Сбросить фильтры
+        </button>
+      </div>
+    </aside>
+
+    <main>
+      <button
+  type="button"
+  onClick={() => setIsMobileFiltersOpen(true)}
+  className="lg:hidden mb-4 w-full rounded-2xl bg-white border border-[#fdeae5] px-4 py-3 text-[#ee8585] font-medium shadow-sm"
+>
+  Фильтры
+</button>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Салоны красоты</h2>
+        <p className="text-gray-500">Найдено: {filteredSalons.length}</p>
+      </div>
+
+      {filteredSalons.length === 0 ? (
+        <EmptyState
+          title="Ничего не найдено"
+          description="Попробуйте изменить поисковый запрос или фильтры."
+        />
+      ) : (
+        <div className="space-y-5">
+          {filteredSalons.map((salon) => {
+            const avgRating =
+              salon.reviews?.length > 0
+                ? (
+                    salon.reviews.reduce(
+                      (sum, review) => sum + review.rating,
+                      0
+                    ) / salon.reviews.length
+                  ).toFixed(1)
+                : 0;
+
+            const minPrice =
+              salon.services?.length > 0
+                ? Math.min(
+                    ...salon.services.map((service) => Number(service.price))
+                  )
+                : null;
+
+            return (
+              <Card
+                key={salon.id}
+                className="relative overflow-hidden p-4 flex flex-col md:flex-row gap-5 border border-[#fdeae5] hover:shadow-xl transition bg-white"
+              >
+                <img
+                  src={getImageUrl(salon.imageUrl)}
+                  alt={salon.name}
+                  className="w-full md:w-56 h-44 object-cover rounded-2xl bg-[#fff7f5]"
+                  onError={(e) => {
+                    e.currentTarget.src = FALLBACK_SALON_IMAGE;
+                  }}
+                />
+
+                <div className="flex-1 pr-10">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {salon.name}
+                  </h2>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <StarRating rating={Number(avgRating)} size={16} />
+                    <span className="text-sm text-gray-500">
+                      {salon.reviews?.length
+                        ? `${avgRating} • ${salon.reviews.length} отзывов`
+                        : "Пока нет отзывов"}
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-gray-600 line-clamp-2">
+                    {salon.services?.slice(0, 4).map((s) => s.name).join(", ") ||
+                      "Услуги пока не добавлены"}
+                  </p>
+
+                  <div className="flex items-start gap-2 text-gray-500 mt-3">
+                    <MapPin className="w-4 h-4 mt-1 shrink-0" />
+                    <span>{salon.address || "Адрес не указан"}</span>
+                  </div>
+
+                  {minPrice !== null && (
+                    <p className="mt-3 text-[#ee8585] font-semibold">
+                      от {minPrice} сом
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <Link to={`/salons/${salon.id}`}>
+                      <Button className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]">
+                        Подробнее
+                      </Button>
+                    </Link>
+
+                    <Link to={`/booking/${salon.id}`}>
+                      <Button>Записаться</Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {user?.role === "CLIENT" && (
+                  <button
+                    type="button"
+                    onClick={() => toggleFavorite(salon.id)}
+                    className="absolute top-5 right-5"
+                  >
+                    <Heart
+                      className={
+                        favoriteSalonIds.includes(salon.id)
+                          ? "w-7 h-7 fill-[#ee8585] text-[#ee8585]"
+                          : "w-7 h-7 text-pink-300 hover:text-[#ee8585]"
+                      }
                     />
+                  </button>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </main>
+  </div>
+</section>
+{isMobileFiltersOpen && (
+  <div className="fixed inset-0 z-50 bg-black/40 flex items-end lg:hidden">
+    <div className="w-full max-h-[85vh] overflow-y-auto bg-white rounded-t-3xl p-5">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xl font-bold">Фильтры</h2>
 
-                    <div className="p-5 flex flex-col flex-1">
-                      <div className="mb-3">
-                        <div className="flex flex-wrap gap-2 mb-3">
-                              {(salon.reviews?.length || 0) >= 1 && (
-                              <span className="text-xs bg-pink-50 text-pink-600 px-3 py-1 rounded-full border border-pink-100 font-medium">
-                              Есть отзывы
-                             </span>
-                             )}
+        <button
+          type="button"
+          onClick={() => setIsMobileFiltersOpen(false)}
+          className="text-[#ee8585] font-medium"
+        >
+          Закрыть
+        </button>
+      </div>
 
-                               {(salon.services?.length || 0) >= 3 && (
-                               <span className="text-xs bg-white text-gray-700 px-3 py-1 rounded-full border border-pink-100 font-medium">
-                               Топ салон
-                               </span>
-                             )}
-                        </div>
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex items-start gap-2 min-w-0">
-                            <Store className="w-5 h-5 text-pink-400 mt-1 shrink-0" />
-                            <h2 className="text-2xl font-semibold text-gray-900 leading-tight break-words">
-                              {salon.name}
-                            </h2>
-                          </div>
+      <div className="mb-6">
+  <h3 className="font-semibold text-gray-800 mb-3">
+    Популярные категории
+  </h3>
 
-                          {user?.role === "CLIENT" && (
-                            <button
-                              type="button"
-                              onClick={() => toggleFavorite(salon.id)}
-                              className="shrink-0"
-                            >
-                              <Heart
-                                className={
-                                  favoriteSalonIds.includes(salon.id)
-                                    ? "w-5 h-5 fill-pink-500 text-pink-500"
-                                    : "w-5 h-5 text-pink-300 hover:text-pink-500"
-                                }
-                              />
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-  <StarRating rating={Number(avgRating)} size={16} />
-  <span className="text-sm text-gray-500">
-    {salon.reviews?.length
-      ? `${avgRating} • ${salon.reviews.length} отзывов`
-      : "Пока нет отзывов"}
-  </span>
+  <div className="flex flex-col gap-2">
+    {["Маникюр", "Волосы", "Макияж", "Брови", "Уход"].map((category) => (
+      <button
+        key={category}
+        type="button"
+        onClick={() =>
+  setSelectedCategory(selectedCategory === category ? "" : category)
+}
+        className={`text-left rounded-2xl border px-4 py-2 text-sm font-medium transition ${
+  selectedCategory === category
+    ? "bg-[#ee8585] text-white border-[#ee8585]"
+    : "bg-[#fff7f5] text-[#ee8585] border-[#fdeae5] hover:bg-pink-100"
+}`}
+      >
+        {category}
+      </button>
+    ))}
+  </div>
 </div>
-                      </div>
 
-                      <p className="text-gray-600 mb-3 line-clamp-2 min-h-[48px] leading-6">
-                        {salon.description || "Описание пока не добавлено"}
-                      </p>
+      <div className="space-y-6">
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Цена</h3>
 
-                      <div className="flex items-start gap-2 text-gray-500 mb-4 min-h-[28px] text-sm">
-                        <MapPin className="w-4 h-4 mt-1 shrink-0" />
-                        <span className="break-words">
-                          {salon.address || "Адрес не указан"}
-                        </span>
-                      </div>
+          <select
+            value={priceFilter}
+            onChange={(e) => setPriceFilter(e.target.value)}
+            className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+          >
+            <option value="ALL">Все цены</option>
+            <option value="20">До 2000 сом</option>
+            <option value="30">До 3000 сом</option>
+            <option value="50">До 5000 сом</option>
+          </select>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+  <input
+    type="number"
+    value={minPriceFilter}
+    onChange={(e) => setMinPriceFilter(e.target.value)}
+    placeholder="от"
+    className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+  />
 
-                      {minPrice !== null && (
-  <div className="mb-4">
-    <span className="inline-flex items-center rounded-full bg-white border border-pink-100 px-3 py-1 text-sm font-medium text-gray-700">
-      от {minPrice} сом
-    </span>
+  <input
+    type="number"
+    value={maxPriceFilter}
+    onChange={(e) => setMaxPriceFilter(e.target.value)}
+    placeholder="до"
+    className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+  />
+</div>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Отзывы</h3>
+
+          <label className="flex items-center gap-3 text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={onlyReviewed}
+              onChange={(e) => setOnlyReviewed(e.target.checked)}
+              className="w-4 h-4 accent-pink-500"
+            />
+            Только с отзывами
+          </label>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-3">Сортировка</h3>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full rounded-3xl border border-[#fdeae5] bg-[#fffdfc] px-5 py-3 text-base outline-none transition focus:border-[#ee8585] focus:ring-4 focus:ring-[#fff1ee]"
+          >
+            <option value="DEFAULT">По умолчанию</option>
+            <option value="CHEAPEST">Сначала дешевле</option>
+            <option value="EXPENSIVE">Сначала дороже</option>
+            <option value="MOST_SERVICES">Больше услуг</option>
+            <option value="MOST_REVIEWS">Больше отзывов</option>
+<option value="BEST_RATING">Лучший рейтинг</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSearch("");
+            setSelectedCategory("");
+            setPriceFilter("ALL");
+            setMinPriceFilter("");
+            setMaxPriceFilter("");
+            setOnlyReviewed(false);
+            setSortBy("DEFAULT");
+          }}
+          className="w-full rounded-2xl border border-pink-200 bg-[#fff7f5] px-4 py-3 text-[#ee8585] font-medium hover:bg-pink-100 transition"
+        >
+          Сбросить фильтры
+        </button>
+      </div>
+    </div>
   </div>
 )}
-
-                      <div className="mb-5">
-  <p className="font-medium mb-2 text-gray-900">Популярные услуги:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {(salon.services || []).slice(0, 4).map((service) => (
-                            <span
-                              key={service.id}
-                              className="text-sm bg-pink-50 text-pink-600 px-3 py-1 rounded-full border border-pink-100 font-medium"
-                            >
-                              {service.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 mt-auto pt-3">
-                        <Link to={`/salons/${salon.id}`} className="w-full">
-                          <Button className="w-full bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
-                           Подробнее
-                          </Button>
-                        </Link>
-
-                        <Link to={`/booking/${salon.id}`} className="w-full">
-                          <Button className="w-full">Записаться</Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

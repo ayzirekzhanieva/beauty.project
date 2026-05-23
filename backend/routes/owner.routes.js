@@ -482,7 +482,15 @@ router.post("/specialists", authMiddleware, ownerOnly, upload.single("photo"), a
 router.patch("/specialists/:id", authMiddleware, ownerOnly, upload.single("photo"), async (req, res) => {
   try {
     const specialistId = Number(req.params.id);
-    const { fullName, title, bio, workStartTime, workEndTime, workDays } = req.body;
+    const {
+  fullName,
+  title,
+  bio,
+  salonId,
+  workStartTime,
+  workEndTime,
+  workDays,
+} = req.body;
 
     const specialist = await prisma.specialist.findUnique({
       where: { id: specialistId },
@@ -500,17 +508,18 @@ router.patch("/specialists/:id", authMiddleware, ownerOnly, upload.single("photo
     }
 
     const updatedSpecialist = await prisma.specialist.update({
-      where: { id: specialistId },
-      data: {
-        fullName,
-        title,
-        bio,
-        workStartTime,
-        workEndTime,
-        workDays,
-        photoUrl: req.file ? `/uploads/${req.file.filename}` : specialist.photoUrl,
-      },
-    });
+  where: { id: specialistId },
+  data: {
+    fullName,
+    title,
+    bio,
+    salonId: Number(salonId),
+    workStartTime,
+    workEndTime,
+    workDays,
+    photoUrl: req.file ? `/uploads/${req.file.filename}` : specialist.photoUrl,
+  },
+});
 
     res.json({
       message: "Мастер обновлен",
@@ -663,12 +672,6 @@ router.post("/specialist-services", authMiddleware, ownerOnly, async (req, res) 
       return res.status(404).json({ message: "Услуга не найдена" });
     }
 
-    if (service.salonId !== specialist.salonId) {
-      return res.status(400).json({
-        message: "Можно привязать только услугу из этого же салона",
-      });
-    }
-
     const specialistService = await prisma.specialistService.create({
       data: {
         specialistId: Number(specialistId),
@@ -721,6 +724,60 @@ router.delete("/specialist-services/:id", authMiddleware, ownerOnly, async (req,
     res.json({ message: "Услуга отвязана от мастера" });
   } catch (error) {
     console.error("DELETE SPECIALIST SERVICE ERROR:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+router.delete("/specialist-works/:id", async (req, res) => {
+  try {
+    const workId = Number(req.params.id);
+
+    await prisma.specialistWork.delete({
+      where: { id: workId },
+    });
+
+    res.json({
+      message: "Работа удалена",
+    });
+  } catch (error) {
+    console.error("DELETE SPECIALIST WORK ERROR:", error);
+
+    res.status(500).json({
+      message: "Ошибка удаления работы",
+    });
+  }
+});
+router.get("/specialists/:id/manage", authMiddleware, ownerOnly, async (req, res) => {
+  try {
+    const specialistId = Number(req.params.id);
+
+    const specialist = await prisma.specialist.findUnique({
+      where: { id: specialistId },
+      include: {
+        salon: {
+  include: {
+    services: true,
+  },
+},
+        works: true,
+        specialistServices: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!specialist) {
+      return res.status(404).json({ message: "Мастер не найден" });
+    }
+
+    if (specialist.salon.ownerId !== req.user.id) {
+      return res.status(403).json({ message: "Это не ваш мастер" });
+    }
+
+    res.json(specialist);
+  } catch (error) {
+    console.error("GET SPECIALIST MANAGE ERROR:", error);
     res.status(500).json({ message: "Ошибка сервера" });
   }
 });

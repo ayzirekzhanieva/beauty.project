@@ -169,7 +169,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-3xl mx-auto">
         <BackButton />
 
@@ -202,7 +202,7 @@ useEffect(() => {
             </div>
 
             {selectedSpecialist && (
-              <div className="rounded-2xl bg-pink-50 border border-pink-100 p-4 text-sm text-gray-700">
+              <div className="rounded-2xl bg-[#fff7f5] border border-[#fdeae5] p-4 text-sm text-gray-700">
                 <p>
                   <span className="font-semibold">Мастер:</span>{" "}
                   {selectedSpecialist.fullName}
@@ -236,7 +236,7 @@ useEffect(() => {
             </div>
 
             {selectedService && (
-              <div className="rounded-2xl bg-pink-50 border border-pink-100 p-4 text-sm text-gray-700">
+              <div className="rounded-2xl bg-[#fff7f5] border border-[#fdeae5] p-4 text-sm text-gray-700">
                 <p>
                   <span className="font-semibold">Услуга:</span> {selectedService.name}
                 </p>
@@ -253,7 +253,7 @@ useEffect(() => {
 
             <div>
               <label className="block mb-2 font-medium flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-pink-400" />
+                <CalendarDays className="w-4 h-4 text-[#EE8585]" />
                 Дата
               </label>
               <input
@@ -268,7 +268,7 @@ useEffect(() => {
 
             <div ref={timeRef}>
               <label className="block mb-3 font-medium flex items-center gap-2">
-                <Clock3 className="w-4 h-4 text-pink-400" />
+                <Clock3 className="w-4 h-4 text-[#EE8585]" />
                 Время
               </label>
 
@@ -296,8 +296,8 @@ useEffect(() => {
                           isBusy
                             ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                             : isSelected
-                            ? "bg-pink-500 text-white border-pink-500"
-                            : "bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+                            ? "bg-[#ee8585] text-white border-pink-500"
+                            : "bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
                         }`}
                       >
                         {slot}
@@ -329,7 +329,7 @@ useEffect(() => {
  selectedService &&
  bookingDate &&
  bookingTime && (
-  <div className="rounded-2xl border border-pink-100 bg-pink-50 p-5 space-y-2 text-sm text-gray-700">
+  <div className="rounded-2xl border border-[#fdeae5] bg-[#fff7f5] p-5 space-y-2 text-sm text-gray-700">
     <h3 className="text-base font-semibold text-black mb-2">
       Детали записи
     </h3>
@@ -356,7 +356,7 @@ useEffect(() => {
       <span className="font-medium">Время:</span> {bookingTime}
     </p>
 
-    <p className="text-pink-600 font-semibold pt-1">
+    <p className="text-[#ee8585] font-semibold pt-1">
       Стоимость: {selectedService.price} сом
     </p>
   </div>

@@ -77,7 +77,7 @@ useEffect(() => {
       });
 
       setProfile(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      sessionStorage.setItem("user", JSON.stringify(res.data.user));
       toast.success("Профиль обновлен");
       window.location.reload();
     } catch (error) {
@@ -89,8 +89,8 @@ useEffect(() => {
   try {
     await api.delete("/auth/me");
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
 
     toast.success("Аккаунт удалён");
 
@@ -126,13 +126,13 @@ useEffect(() => {
   }
 
 return (
-  <div className="min-h-screen bg-pink-50 p-6">
+  <div className="min-h-screen bg-[#fff7f5] p-6">
     <div className="mx-auto max-w-6xl">
       <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -149,7 +149,7 @@ return (
 
       <Card className="mb-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border border-pink-100 bg-pink-50 text-4xl font-bold text-pink-500">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border border-[#fdeae5] bg-[#fff7f5] text-4xl font-bold text-[#ee8585]">
             {(profile?.fullName || profile?.email || "U")
               .charAt(0)
               .toUpperCase()}
@@ -163,7 +163,7 @@ return (
             <p className="text-gray-600">{profile?.email || "—"}</p>
 
             <div className="flex flex-wrap gap-3 pt-1">
-              <span className="inline-flex rounded-full border border-pink-200 bg-pink-50 px-4 py-1 text-sm font-medium text-pink-600">
+              <span className="inline-flex rounded-full border border-pink-200 bg-[#fff7f5] px-4 py-1 text-sm font-medium text-[#ee8585]">
                 {getRoleLabel(profile?.role)}
               </span>
 
@@ -182,19 +182,19 @@ return (
           </h2>
 
           <div className="space-y-5">
-            <div className="rounded-2xl border border-pink-100 bg-pink-50 p-4">
+            <div className="rounded-2xl border border-[#fdeae5] bg-[#fff7f5] p-4">
               <p className="text-sm font-medium text-gray-500">Email</p>
               <p className="mt-1 text-lg text-gray-900">{profile?.email || "—"}</p>
             </div>
 
-            <div className="rounded-2xl border border-pink-100 bg-pink-50 p-4">
+            <div className="rounded-2xl border border-[#fdeae5] bg-[#fff7f5] p-4">
               <p className="text-sm font-medium text-gray-500">Тип аккаунта</p>
               <p className="mt-1 text-lg text-gray-900">
                 {getRoleLabel(profile?.role)}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-pink-100 bg-pink-50 p-4">
+            <div className="rounded-2xl border border-[#fdeae5] bg-[#fff7f5] p-4">
               <p className="text-sm font-medium text-gray-500">Дата регистрации</p>
               <p className="mt-1 text-lg text-gray-900">
                 {formatDate(profile?.createdAt)}
@@ -287,7 +287,7 @@ return (
     {isDeleteModalOpen && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
     <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-6">
-      <h3 className="text-2xl font-bold mb-3 text-pink-500">
+      <h3 className="text-2xl font-bold mb-3 text-[#ee8585]">
         Удалить аккаунт?
       </h3>
 
@@ -304,7 +304,7 @@ return (
         </Button>
 
         <Button
-  className="bg-pink-500 text-white hover:bg-pink-600"
+  className="bg-[#ee8585] text-white hover:bg-[#ee8585]"
   onClick={handleDeleteAccount}
 >
   Удалить

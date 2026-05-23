@@ -23,10 +23,12 @@ function formatReviewDate(dateString) {
 
   const date = new Date(dateString);
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleString("ru-RU", {
     day: "numeric",
     month: "long",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -55,7 +57,9 @@ export default function SalonDetailsPage() {
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
     comment: "",
+    specialistId: "",
   });
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     loadSalon();
@@ -116,14 +120,16 @@ useEffect(() => {
   useEffect(() => {
     if (currentUserReview) {
       setReviewForm({
-        rating: currentUserReview.rating || 5,
-        comment: currentUserReview.comment || "",
-      });
+  rating: currentUserReview.rating || 5,
+  comment: currentUserReview.comment || "",
+  specialistId: currentUserReview.specialistId || "",
+});
     } else {
       setReviewForm({
-        rating: 5,
-        comment: "",
-      });
+  rating: 5,
+  comment: "",
+  specialistId: "",
+});
     }
   }, [currentUserReview]);
 
@@ -136,15 +142,22 @@ useEffect(() => {
     }
 
     try {
+      console.log("REVIEW FORM BEFORE SEND:", reviewForm);
       const res = await api.post("/reviews", {
-        salonId: Number(id),
-        rating: Number(reviewForm.rating),
-        comment: reviewForm.comment,
-      });
+  salonId: Number(id),
+  specialistId: reviewForm.specialistId
+    ? Number(reviewForm.specialistId)
+    : null,
+  rating: Number(reviewForm.rating),
+  comment: reviewForm.comment,
+});
+
+console.log("UPDATED REVIEW RESPONSE:", res.data);
 
       toast.success(res.data?.message || "Отзыв сохранен");
       await loadReviews();
       await loadSalon();
+      setIsReviewModalOpen(false);
     } catch (error) {
       console.error("Ошибка сохранения отзыва:", error);
       toast.error(error.response?.data?.message || "Ошибка сохранения отзыва");
@@ -168,13 +181,13 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 px-4 py-6 sm:px-6">
+    <div className="min-h-screen bg-[#fff7f5] px-4 py-6 sm:px-6">
   <div className="max-w-6xl mx-auto space-y-8">
         <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -185,20 +198,20 @@ useEffect(() => {
   </button>
 </div>
 
-        <Card className="overflow-hidden p-0 mb-8">
+        <Card className="overflow-hidden p-0 mb-8 rounded-[32px] shadow-sm border border-[#fdeae5] bg-white">
   <img
     src={getImageUrl(salon.imageUrl)}
     alt={salon.name}
-    className="w-full h-72 md:h-96 object-cover"
+    className="w-full h-[280px] md:h-[380px] object-cover"
     onError={(e) => {
       e.currentTarget.src = FALLBACK_SALON_IMAGE;
     }}
   />
 
  <div className="p-6 max-w-6xl mx-auto">
-    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+    <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
       <div className="flex-1">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
           {salon.name}
         </h1>
 
@@ -232,55 +245,47 @@ useEffect(() => {
 </Link>
 
 <a href="#reviews" className="w-full sm:w-auto">
-  <Button className="w-full sm:w-auto bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+  <Button className="w-full sm:w-auto bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]">
     Смотреть отзывы
   </Button>
 </a>
         </div>
       </div>
 
-      <div className="w-full lg:w-[280px]">
-        <div className="rounded-3xl border border-pink-100 bg-pink-50 p-5">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Кратко о салоне
-          </h3>
+      <div className="grid grid-cols-2 gap-4">
+  <div className="rounded-3xl border border-[#fdeae5] bg-white p-5 text-center shadow-sm">
+    <p className="text-2xl font-bold text-gray-900">
+      {reviewsData.averageRating || "0.0"}/5
+    </p>
+    <p className="text-sm text-gray-500 mt-1">Рейтинг</p>
+  </div>
 
-          <div className="space-y-4 text-sm">
-            <div>
-              <p className="text-gray-500 mb-1">Рейтинг</p>
-              <p className="font-semibold text-gray-900">
-                {reviewsData.averageRating || "0.0"} / 5
-              </p>
-            </div>
+  <div className="rounded-3xl border border-[#fdeae5] bg-white p-5 text-center shadow-sm">
+    <p className="text-2xl font-bold text-gray-900">
+      {reviewsData.totalReviews}
+    </p>
+    <p className="text-sm text-gray-500 mt-1">Отзывы</p>
+  </div>
 
-            <div>
-              <p className="text-gray-500 mb-1">Отзывы</p>
-              <p className="font-semibold text-gray-900">
-                {reviewsData.totalReviews}
-              </p>
-            </div>
+  <div className="rounded-3xl border border-[#fdeae5] bg-white p-5 text-center shadow-sm">
+    <p className="text-2xl font-bold text-gray-900">
+      {salon.services?.length || 0}
+    </p>
+    <p className="text-sm text-gray-500 mt-1">Услуги</p>
+  </div>
 
-            <div>
-              <p className="text-gray-500 mb-1">Услуги</p>
-              <p className="font-semibold text-gray-900">
-                {salon.services?.length || 0}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 mb-1">Мастера</p>
-              <p className="font-semibold text-gray-900">
-                {salon.specialists?.length || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div className="rounded-3xl border border-[#fdeae5] bg-white p-5 text-center shadow-sm">
+    <p className="text-2xl font-bold text-gray-900">
+      {salon.specialists?.length || 0}
+    </p>
+    <p className="text-sm text-gray-500 mt-1">Мастера</p>
+  </div>
+</div>
     </div>
   </div>
 </Card>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="space-y-8 mb-8">
           <Card>
   <div className="flex items-center justify-between gap-4 mb-6">
     <div className="flex items-center gap-2">
@@ -299,11 +304,11 @@ useEffect(() => {
       description="Салон пока не добавил услуги."
     />
   ) : (
-    <div className="space-y-4">
+    <div className="grid md:grid-cols-2 gap-4">
       {(salon.services || []).map((service) => (
         <div
           key={service.id}
-          className="rounded-3xl border border-pink-100 bg-white p-5 hover:shadow-md transition"
+          className="rounded-3xl border border-[#fdeae5] bg-white p-5 hover:shadow-md transition"
         >
           <div className="flex items-start justify-between gap-4 mb-3">
             <div>
@@ -315,18 +320,18 @@ useEffect(() => {
               </p>
             </div>
 
-            <span className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600">
+            <span className="shrink-0 rounded-full border border-pink-200 bg-[#fff7f5] px-4 py-2 text-sm font-semibold text-[#ee8585]">
               {service.price} сом
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
-              <Clock3 className="w-4 h-4 text-pink-400" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#fdeae5] bg-white px-3 py-1 text-sm text-gray-600">
+              <Clock3 className="w-4 h-4 text-[#EE8585]" />
               {service.durationMin} мин
             </span>
 
-            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#fdeae5] bg-white px-3 py-1 text-sm text-gray-600">
               от {service.price} сом
             </span>
           </div>
@@ -354,11 +359,11 @@ useEffect(() => {
       description="Салон пока не добавил товары."
     />
   ) : (
-    <div className="space-y-4">
+    <div className="grid md:grid-cols-2 gap-4">
       {(salon.products || []).map((product) => (
         <div
           key={product.id}
-          className="rounded-3xl border border-pink-100 bg-white p-5 hover:shadow-md transition"
+          className="rounded-3xl border border-[#fdeae5] bg-white p-5 hover:shadow-md transition"
         >
           <div className="flex items-start justify-between gap-4 mb-3">
             <div>
@@ -370,13 +375,13 @@ useEffect(() => {
               </p>
             </div>
 
-            <span className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600">
+            <span className="shrink-0 rounded-full border border-pink-200 bg-[#fff7f5] px-4 py-2 text-sm font-semibold text-[#ee8585]">
               {product.price} сом
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#fdeae5] bg-white px-3 py-1 text-sm text-gray-600">
               В наличии: {product.stock}
             </span>
 
@@ -399,18 +404,18 @@ useEffect(() => {
 
         <Card className="mb-8">
   <div className="flex items-center justify-between gap-4 mb-6">
-  <div className="flex items-center gap-2">
+  <div className="flex gap-3 mt-5">
     <UserRound className="w-5 h-5 text-pink-400" />
     <h2 className="text-2xl font-semibold text-gray-900">Наши мастера</h2>
   </div>
 
-  <div className="flex items-center gap-3">
+  <div className="flex gap-3 mt-5">
     <span className="text-sm text-gray-500">
       {salon.specialists?.length || 0} мастеров
     </span>
 
       <Link to={`/salons/${salon.id}/specialists`}>
-        <Button className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+        <Button className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]">
           Смотреть всех
         </Button>
       </Link>
@@ -423,7 +428,7 @@ useEffect(() => {
       description="Скоро здесь появится команда салона."
     />
   ) : (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div className="flex gap-5 overflow-x-auto pb-3">
       {salon.specialists.map((specialist) => {
         const specialistServices = (specialist.specialistServices || [])
           .map((item) => item.service)
@@ -447,24 +452,24 @@ useEffect(() => {
         return (
           <div
             key={specialist.id}
-            className="overflow-hidden rounded-3xl border border-pink-100 bg-white shadow-sm hover:shadow-lg transition flex flex-col"
+            className="min-w-[600px] max-w-[600px] overflow-hidden rounded-3xl border border-[#fdeae5] bg-white shadow-sm hover:shadow-md transition flex flex-row"
           >
             <img
               src={getImageUrl(specialist.photoUrl)}
               alt={specialist.fullName}
-              className="w-full h-60 object-cover"
+              className="w-[140px] h-[260px] object-cover shrink-0"
               onError={(e) => {
                 e.currentTarget.src = FALLBACK_SALON_IMAGE;
               }}
             />
 
-            <div className="p-5 flex flex-col flex-1">
+            <div className="p-5 flex flex-col justify-between flex-1">
               <div className="mb-3">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {specialist.fullName}
                 </h3>
 
-                <p className="text-pink-500 font-medium mt-1">
+                <p className="text-[#ee8585] font-medium mt-1">
                   {specialist.title || "Специалист"}
                 </p>
               </div>
@@ -473,22 +478,26 @@ useEffect(() => {
                 {specialist.bio || "Описание скоро появится"}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 mt-auto">
+              <div className="flex flex-wrap gap-2 mt-4">
                 <Button
-                  className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
-                  onClick={() => navigate(`/specialists/${specialist.id}`)}
-                >
-                  Подробнее
-                </Button>
+  className="px-4 py-2 text-sm bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
+  onClick={() => navigate(`/specialists/${specialist.id}`)}
+>
+  Подробнее
+</Button>
 
                 <Button
-                  onClick={() =>
-                    navigate(`/booking/${salon.id}?specialistId=${specialist.id}`)
-                  }
-                >
-                  Записаться
-                </Button>
-                <Button onClick={handleStartChat}>
+  className="px-4 py-2 text-sm"
+  onClick={() =>
+    navigate(`/booking/${salon.id}?specialistId=${specialist.id}`)
+  }
+>
+  Записаться
+</Button>
+                <Button
+  className="px-4 py-2 text-sm"
+  onClick={handleStartChat}
+>
   Написать
 </Button>
               </div>
@@ -514,74 +523,31 @@ useEffect(() => {
     </p>
   </div>
 
-  {currentUserReview && (
-    <span className="inline-flex rounded-full border border-pink-200 bg-pink-50 px-4 py-1 text-sm font-medium text-pink-600">
-      Ваш отзыв
-    </span>
-  )}
+  
+</div>
+<div className="mb-5">
+  <Button
+    className="w-full rounded-3xl py-4 text-lg font-semibold"
+    onClick={() => setIsReviewModalOpen(true)}
+  >
+    {currentUserReview ? "Изменить отзыв" : "Оставить отзыв"}
+  </Button>
 </div>
 
-            {!isAuthenticated() ? (
-              <p className="text-gray-500">
-                Войдите в аккаунт, чтобы оставить отзыв.
-              </p>
-            ) : user?.role !== "CLIENT" ? (
-              <p className="text-gray-500">
-                Только клиенты могут оставлять отзывы.
-              </p>
-            ) : (
-              <form onSubmit={handleSubmitReview} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Рейтинг
-                  </label>
-
-                  <StarRating
-                    rating={reviewForm.rating}
-                    interactive={true}
-                    onChange={(value) =>
-                      setReviewForm({
-                        ...reviewForm,
-                        rating: value,
-                      })
-                    }
-                    size={24}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Комментарий
-                  </label>
-
-                  <textarea
-                    value={reviewForm.comment}
-                    onChange={(e) =>
-                      setReviewForm({
-                        ...reviewForm,
-                        comment: e.target.value,
-                      })
-                    }
-                    placeholder="Напишите ваш отзыв"
-                    rows="5"
-                    className="w-full p-3 rounded-2xl border border-pink-200 outline-none bg-white"
-                  />
-                </div>
-
-                {currentUserReview && (
-  <p className="text-sm text-gray-500">
-    Вы уже оставляли отзыв. Здесь можно изменить рейтинг и комментарий.
+            {!isAuthenticated() && (
+  <p className="text-gray-500">
+    Войдите в аккаунт, чтобы оставить отзыв.
   </p>
 )}
 
-                <Button type="submit" className="w-full">
-                  {currentUserReview ? "Обновить отзыв" : "Отправить отзыв"}
-                </Button>
-              </form>
-            )}
+{isAuthenticated() && user?.role !== "CLIENT" && (
+  <p className="text-gray-500">
+    Только клиенты могут оставлять отзывы.
+  </p>
+)}
           </Card>
-
-          <Card className="xl:col-span-2">
+<div id="reviews">
+          <Card id="reviews" className="xl:col-span-2">
   <div className="flex items-center justify-between gap-4 mb-6">
     <h2 className="text-2xl font-semibold text-gray-900">
       Отзывы клиентов
@@ -593,7 +559,7 @@ useEffect(() => {
   </div>
 
   {reviewsData.reviews.length === 0 ? (
-    <div className="rounded-3xl border border-dashed border-pink-200 bg-pink-50 p-10 text-center">
+    <div className="rounded-3xl border border-dashed border-pink-200 bg-[#fff7f5] p-5 text-center">
       <p className="text-lg font-medium text-gray-700">
         Пока нет отзывов
       </p>
@@ -602,21 +568,21 @@ useEffect(() => {
       </p>
     </div>
   ) : (
-    <div className="space-y-4">
+    <div className="grid md:grid-cols-2 gap-4">
       {reviewsData.reviews.map((review) => {
         const isMine = user && review?.user?.id === user.id;
 
         return (
           <div
             key={review.id}
-            className={`rounded-3xl border p-5 shadow-sm ${
+            className={`rounded-3xl border p-5 shadow-sm hover:shadow-md transition bg-white ${
               isMine
-                ? "border-pink-200 bg-pink-50"
-                : "border-pink-100 bg-white"
+                ? "border-pink-200 bg-[#fff7f5]"
+                : "border-[#fdeae5] bg-white"
             }`}
           >
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 text-sm font-bold text-pink-600">
+            <div className="flex items-start gap-4 min-h-[130px]">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#fff7f5] border border-[#fdeae5] text-sm font-bold text-[#ee8585]">
                 {getInitials(review?.user?.fullName)}
               </div>
 
@@ -627,16 +593,16 @@ useEffect(() => {
                   </p>
 
                   {isMine && (
-                    <span className="inline-flex rounded-full border border-pink-200 bg-white px-3 py-1 text-xs font-medium text-pink-600">
+                    <span className="inline-flex rounded-full border border-pink-200 bg-white px-3 py-1 text-xs font-medium text-[#ee8585]">
                       Ваш отзыв
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-3 mb-2">
-                  <StarRating rating={review.rating} size={16} />
+                  <StarRating rating={Number(review.rating)} size={16} />
                   <span className="text-sm text-gray-500">
-                    {formatReviewDate(review.createdAt)}
+                    {formatReviewDate(review.updatedAt || review.createdAt)}
                   </span>
                 </div>
 
@@ -651,8 +617,81 @@ useEffect(() => {
     </div>
   )}
 </Card>
+</div>
         </div>
       </div>
+      {isReviewModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="w-full max-w-3xl rounded-[40px] bg-white p-8 shadow-2xl">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {currentUserReview ? "Изменить отзыв" : "Оставить отзыв"}
+        </h2>
+
+        <button
+          type="button"
+          onClick={() => setIsReviewModalOpen(false)}
+          className="text-gray-400 hover:text-gray-700 text-4xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmitReview} className="space-y-8">
+      <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Рейтинг
+          </label>
+
+          <div className="flex gap-2">
+  {[1, 2, 3, 4, 5].map((star) => (
+    <button
+      key={star}
+      type="button"
+      onClick={() =>
+        setReviewForm({
+          ...reviewForm,
+          rating: star,
+        })
+      }
+      className={`text-3xl transition ${
+        star <= reviewForm.rating
+          ? "text-[#ee8585]"
+          : "text-gray-300"
+      }`}
+    >
+      ★
+    </button>
+  ))}
+</div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Комментарий
+          </label>
+
+          <textarea
+            value={reviewForm.comment}
+            onChange={(e) =>
+              setReviewForm({
+                ...reviewForm,
+                comment: e.target.value,
+              })
+            }
+            placeholder="Напишите ваш отзыв"
+            rows="5"
+            className="w-full min-h-[220px] resize-none rounded-3xl border border-pink-200 bg-white p-5 text-lg outline-none focus:border-[#ee8585]"
+          />
+        </div>
+
+        <Button type="submit" className="w-full">
+          {currentUserReview ? "Обновить отзыв" : "Отправить отзыв"}
+        </Button>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }

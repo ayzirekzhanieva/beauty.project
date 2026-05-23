@@ -39,9 +39,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="mb-10 text-center">
-  <h1 className="text-4xl font-bold text-pink-500">
+  <h1 className="text-4xl font-bold text-[#ee8585]">
     Glow Find
   </h1>
   <p className="mt-2 text-gray-500">
@@ -83,14 +83,14 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-gray-600 mt-4">
-            <Link to="/forgot-password" className="text-pink-500 font-medium">
+            <Link to="/forgot-password" className="text-[#ee8585] font-medium">
               Забыли пароль?
             </Link>
           </p>
 
           <p className="text-center text-gray-600 mt-4">
             Нет аккаунта?{" "}
-            <Link to="/register" className="text-pink-500 font-medium">
+            <Link to="/register" className="text-[#ee8585] font-medium">
               Зарегистрироваться
             </Link>
           </p>

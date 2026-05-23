@@ -181,4 +181,9 @@
     right: 0;
     border-right-color: var(--border);
   }
+  @media (max-width: 1024px) {
+  body {
+    padding-bottom: 20px;
+  }
+}
 }

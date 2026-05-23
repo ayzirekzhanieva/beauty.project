@@ -110,9 +110,12 @@ model Review {
   userId    Int
   salonId   Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  specialistId Int?
+  specialist   Specialist? @relation(fields: [specialistId], references: [id], onDelete: SetNull)
 
   @@unique([userId, salonId])
 }
@@ -145,6 +148,7 @@ model Specialist {
   workStartTime      String?             @default("09:00")
   workEndTime        String?             @default("18:00")
   workDays           String?             @default("1,2,3,4,5,6")
+  reviews Review[]
 }
 
 model SpecialistWork {

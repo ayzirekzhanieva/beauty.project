@@ -22,9 +22,13 @@ export default function StarRating({
             className={interactive ? "cursor-pointer" : "cursor-default"}
           >
             <Star
-              size={size}
-              className={filled ? "fill-pink-400 text-pink-400" : "text-pink-200"}
-            />
+  size={size}
+  className={`w-4 h-4 ${
+    filled
+      ? "fill-[#EE8585] text-[#EE8585]"
+      : "fill-transparent text-gray-300"
+  }`}
+/>
           </button>
         );
       })}

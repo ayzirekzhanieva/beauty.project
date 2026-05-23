@@ -70,13 +70,13 @@ useEffect(() => {
 
   if (!specialist) {
     return (
-      <div className="min-h-screen bg-pink-50 p-6">
+      <div className="min-h-screen bg-[#fff7f5] p-6">
         <div className="max-w-6xl mx-auto">
           <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -101,13 +101,13 @@ useEffect(() => {
   const workDays = formatWorkDays(specialist.workDays);
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-6xl mx-auto">
         <div className="sticky top-24 z-40 ml-4 mt-2 mb-3 w-fit">
   <button
     type="button"
     onClick={() => window.history.back()}
-    className={`bg-white/95 backdrop-blur shadow-md border border-pink-100 text-pink-500 transition-all duration-300 flex items-center justify-center ${
+    className={`bg-white/95 backdrop-blur shadow-md border border-[#fdeae5] text-[#ee8585] transition-all duration-300 flex items-center justify-center ${
       isScrolled
         ? "w-11 h-11 rounded-full text-2xl"
         : "px-4 py-2 rounded-2xl gap-2 text-lg"
@@ -133,22 +133,22 @@ useEffect(() => {
 
     <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-center">
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <span className="inline-flex rounded-full border border-pink-200 bg-pink-50 px-4 py-1 text-sm font-medium text-pink-600">
+        <span className="inline-flex rounded-full border border-pink-200 bg-[#fff7f5] px-4 py-1 text-sm font-medium text-[#ee8585]">
           Мастер
         </span>
 
         {specialist.salon?.name && (
-          <span className="inline-flex rounded-full border border-pink-100 bg-white px-4 py-1 text-sm text-gray-600">
+          <span className="inline-flex rounded-full border border-[#fdeae5] bg-white px-4 py-1 text-sm text-gray-600">
             {specialist.salon.name}
           </span>
         )}
       </div>
 
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 leading-tight">
+      <h1 className="text-3xl sm:text-4xl md:text-3xl font-bold text-gray-900 mb-3 leading-tight">
         {specialist.fullName}
       </h1>
 
-      <p className="text-lg sm:text-xl text-pink-500 font-medium mb-5">
+      <p className="text-lg sm:text-xl text-[#ee8585] font-medium mb-5">
         {specialist.title || "Специалист"}
       </p>
 
@@ -157,14 +157,14 @@ useEffect(() => {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 mb-6">
-        <div className="rounded-3xl border border-pink-100 bg-pink-50 p-4">
+        <div className="rounded-3xl border border-[#fdeae5] bg-[#fff7f5] p-4">
           <p className="text-sm text-gray-500 mb-2">Рабочие дни</p>
           <div className="flex flex-wrap gap-2">
             {workDays.length > 0 ? (
               workDays.map((day) => (
                 <span
                   key={day}
-                  className="rounded-full border border-pink-100 bg-white px-3 py-1 text-xs font-medium text-pink-600"
+                  className="rounded-full border border-[#fdeae5] bg-white px-3 py-1 text-xs font-medium text-[#ee8585]"
                 >
                   {day}
                 </span>
@@ -175,10 +175,10 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-pink-100 bg-pink-50 p-4">
+        <div className="rounded-3xl border border-[#fdeae5] bg-[#fff7f5] p-4">
           <p className="text-sm text-gray-500 mb-2">Рабочие часы</p>
           <p className="text-gray-700 inline-flex items-center gap-2">
-            <Clock3 className="w-4 h-4 text-pink-400" />
+            <Clock3 className="w-4 h-4 text-[#EE8585]" />
             {specialist.workStartTime || "09:00"} –{" "}
             {specialist.workEndTime || "18:00"}
           </p>
@@ -197,7 +197,7 @@ useEffect(() => {
 
         {specialist.salon?.id && (
           <Button
-            className="w-full bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+            className="w-full bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
             onClick={() => navigate(`/salons/${specialist.salon.id}`)}
           >
             Открыть салон
@@ -212,7 +212,7 @@ useEffect(() => {
           <Card>
             <div className="flex items-center justify-between gap-4 mb-5">
   <div className="flex items-center gap-2">
-    <Sparkles className="w-5 h-5 text-pink-500" />
+    <Sparkles className="w-5 h-5 text-[#ee8585]" />
     <h2 className="text-2xl font-semibold text-gray-900">
       Услуги мастера
     </h2>
@@ -224,7 +224,7 @@ useEffect(() => {
 </div>
 
             {specialistServices.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-pink-200 bg-pink-50 p-8 text-center">
+              <div className="rounded-3xl border border-dashed border-pink-200 bg-[#fff7f5] p-8 text-center">
                 <p className="text-gray-700 font-medium">Услуги пока не указаны</p>
                 <p className="text-gray-500 mt-2">
                   Скоро здесь появится список услуг мастера.
@@ -235,7 +235,7 @@ useEffect(() => {
                 {specialistServices.map((service) => (
                   <div
                     key={service.id}
-                    className="rounded-3xl border border-pink-100 bg-white p-5 hover:shadow-md transition"
+                    className="rounded-3xl border border-[#fdeae5] bg-white p-5 hover:shadow-md transition"
                   >
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div>
@@ -247,14 +247,14 @@ useEffect(() => {
                         </p>
                       </div>
 
-                      <span className="shrink-0 rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600">
+                      <span className="shrink-0 rounded-full border border-pink-200 bg-[#fff7f5] px-4 py-2 text-sm font-semibold text-[#ee8585]">
                         {service.price} сом
                       </span>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-  <span className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white px-3 py-1 text-sm text-gray-600">
-    <Clock3 className="w-4 h-4 text-pink-400" />
+  <span className="inline-flex items-center gap-2 rounded-full border border-[#fdeae5] bg-white px-3 py-1 text-sm text-gray-600">
+    <Clock3 className="w-4 h-4 text-[#EE8585]" />
     {service.durationMin} мин
   </span>
 
@@ -274,10 +274,10 @@ useEffect(() => {
             )}
           </Card>
 
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
             <div className="flex items-center justify-between gap-4 mb-5">
   <div className="flex items-center gap-2">
-    <UserRound className="w-5 h-5 text-pink-500" />
+    <UserRound className="w-5 h-5 text-[#ee8585]" />
     <h2 className="text-2xl font-semibold text-gray-900">
       Портфолио
     </h2>
@@ -289,33 +289,26 @@ useEffect(() => {
 </div>
 
             {specialist.works?.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-pink-200 bg-pink-50 p-8 text-center">
+              <div className="rounded-3xl border border-dashed border-pink-200 bg-[#fff7f5] p-8 text-center">
                 <p className="text-gray-700 font-medium">Работы пока не добавлены</p>
                 <p className="text-gray-500 mt-2">
                   Скоро здесь появится портфолио мастера.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-                {specialist.works.map((work) => (
-                  <div
-  key={work.id}
-  className="rounded-3xl overflow-hidden border border-pink-100 bg-white hover:shadow-md transition"
->
-                    <img
-  src={getImageUrl(work.imageUrl)}
-  alt={work.caption || "Работа мастера"}
-  className="w-full h-64 object-cover cursor-pointer hover:scale-[1.02] transition"
-  onClick={() => setSelectedWorkImage(getImageUrl(work.imageUrl))}
-/>
-                    {work.caption && (
-                      <div className="p-3">
-                        <p className="text-sm text-gray-600">{work.caption}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <div className="w-full max-w-full overflow-hidden">
+  <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-3 max-w-full">
+  {specialist.works.map((work) => (
+    <img
+      key={work.id}
+      src={getImageUrl(work.imageUrl)}
+      alt={work.caption || "Работа мастера"}
+      onClick={() => setSelectedWorkImage(getImageUrl(work.imageUrl))}
+      className="h-24 w-24 min-w-[96px] cursor-pointer rounded-2xl object-cover border border-[#fdeae5] hover:scale-105 transition"
+    />
+  ))}
+</div>
+</div>
             )}
           </Card>
         </div>

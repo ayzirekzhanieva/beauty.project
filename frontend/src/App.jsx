@@ -19,6 +19,8 @@ import SalonSpecialistsPage from "./pages/SalonSpecialistsPage";
 import ChatPage from "./pages/ChatPage";
 import MyChatsPage from "./pages/MyChatsPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import QRCodePage from "./pages/QRCodePage";
+import SpecialistManagePage from "./pages/SpecialistManagePage";
 
 export default function App() {
   const location = useLocation();
@@ -43,6 +45,9 @@ const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
         <Route path="/chats/:chatId" element={<ChatPage />} />
         <Route path="/my-chats" element={<MyChatsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/qr-code" element={<QRCodePage />} />
+        <Route path="/specialists/:id/manage" element={<SpecialistManagePage />} />
+        
 
         <Route
           path="/my-bookings"

@@ -51,10 +51,10 @@ export default function FavoritesPage() {
   const validFavorites = favorites.filter((favorite) => favorite?.salon);
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-6xl mx-auto">
        <div className="sticky top-24 z-40 ml-6 mt-4 mb-6 w-fit">
-  <div className="bg-white/90 backdrop-blur rounded-2xl shadow-md border border-pink-100 px-4 py-2">
+  <div className="bg-white/90 backdrop-blur rounded-2xl shadow-md border border-[#fdeae5] px-4 py-2">
     <BackButton />
   </div>
 </div>
@@ -123,13 +123,13 @@ export default function FavoritesPage() {
 
                     <div className="flex gap-3 mt-auto pt-2">
                       <Link to={`/salons/${salon.id}`} className="w-full">
-                        <Button className="w-full bg-white text-pink-500 border border-pink-300 hover:bg-pink-50">
+                        <Button className="w-full bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]">
                           Подробнее
                         </Button>
                       </Link>
 
                       <Button
-                        className="w-full bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+                        className="w-full bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
                         onClick={() => removeFavorite(salon.id)}
                       >
                         Убрать

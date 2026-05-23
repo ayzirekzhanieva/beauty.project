@@ -56,17 +56,17 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="max-w-3xl mx-auto">
         <button
   type="button"
   onClick={() => window.history.back()}
-  className="mb-4 px-4 py-2 rounded-2xl bg-white text-pink-500 border border-pink-100 shadow-sm hover:bg-pink-50 transition"
+  className="mb-4 px-4 py-2 rounded-2xl bg-white text-[#ee8585] border border-[#fdeae5] shadow-sm hover:bg-[#fff7f5] transition"
 >
   ← Назад
 </button>
         <Card className="h-[70vh] flex flex-col">
-          <div className="border-b border-pink-100 pb-4 mb-4">
+          <div className="border-b border-[#fdeae5] pb-4 mb-4">
   <h1 className="text-2xl font-bold text-gray-900">
     {chatInfo?.salon?.name || "Чат"}
   </h1>
@@ -90,8 +90,8 @@ export default function ChatPage() {
       <div
         className={`max-w-[75%] rounded-3xl px-4 py-3 shadow-sm ${
           isMine
-            ? "bg-pink-500 text-white"
-            : "bg-white border border-pink-100 text-gray-800"
+            ? "bg-[#ee8585] text-white"
+            : "bg-white border border-[#fdeae5] text-gray-800"
         }`}
       >
         <p

@@ -43,9 +43,9 @@ function isPastBooking(booking) {
 
 function EmptyState({ title, description }) {
   return (
-    <div className="rounded-3xl border border-pink-100 bg-white p-10 text-center shadow-sm">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-pink-50">
-        <Sparkles className="h-10 w-10 text-pink-500" />
+    <div className="rounded-3xl border border-[#fdeae5] bg-white p-5 text-center shadow-sm">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#fff7f5]">
+        <Sparkles className="h-10 w-10 text-[#ee8585]" />
       </div>
       <h3 className="text-2xl font-semibold text-gray-900">{title}</h3>
       <p className="mt-3 text-gray-500">{description}</p>
@@ -61,7 +61,7 @@ function BookingTabs({ activeTab, setActiveTab, upcomingCount, historyCount }) {
 
   return (
     <div className="mb-8">
-      <div className="inline-flex flex-wrap gap-2 rounded-3xl border border-pink-100 bg-white p-2 shadow-sm">
+      <div className="inline-flex flex-wrap gap-2 rounded-3xl border border-[#fdeae5] bg-white p-2 shadow-sm">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -69,8 +69,8 @@ function BookingTabs({ activeTab, setActiveTab, upcomingCount, historyCount }) {
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
               activeTab === tab.key
-                ? "bg-pink-500 text-white shadow-sm"
-                : "bg-white text-gray-600 hover:bg-pink-50"
+                ? "bg-[#ee8585] text-white shadow-sm"
+                : "bg-white text-gray-600 hover:bg-[#fff7f5]"
             }`}
           >
             {tab.label}
@@ -116,12 +116,12 @@ function BookingCard({ booking, onCancel, onRepeat, onLeaveReview }) {
             </p>
 
             <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-pink-400" />
+              <CalendarDays className="h-4 w-4 text-[#EE8585]" />
               <span>{booking.bookingDate}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-pink-400" />
+              <Clock3 className="h-4 w-4 text-[#EE8585]" />
               <span>{booking.bookingTime}</span>
             </div>
 
@@ -135,7 +135,7 @@ function BookingCard({ booking, onCancel, onRepeat, onLeaveReview }) {
         <div className="flex flex-col gap-3 lg:min-w-[180px]">
           {canCancel && (
             <Button
-              className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+              className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
               onClick={() => onCancel(booking.id)}
             >
               Отменить
@@ -153,7 +153,7 @@ function BookingCard({ booking, onCancel, onRepeat, onLeaveReview }) {
           )}
           {canLeaveReview && (
   <Button
-    className="bg-white text-pink-500 border border-pink-300 hover:bg-pink-50"
+    className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
     onClick={() => onLeaveReview(booking)}
   >
     Оставить отзыв
@@ -313,10 +313,10 @@ export default function MyBookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 p-6">
+    <div className="min-h-screen bg-[#fff7f5] p-6">
       <div className="mx-auto max-w-6xl">
         <div className="sticky top-24 z-40 ml-6 mt-4 mb-6 w-fit">
-  <div className="bg-white/90 backdrop-blur rounded-2xl shadow-md border border-pink-100 px-4 py-2">
+  <div className="bg-white/90 backdrop-blur rounded-2xl shadow-md border border-[#fdeae5] px-4 py-2">
     <BackButton />
   </div>
 </div>

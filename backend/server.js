@@ -17,13 +17,8 @@ const notificationRoutes = require("./routes/notification.routes");
 const app = express();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://beauty-project-inky.vercel.app",
-  ],
+  origin: true,
   credentials: true,
-  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));

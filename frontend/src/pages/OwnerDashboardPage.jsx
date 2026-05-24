@@ -2030,9 +2030,6 @@ async function sendOwnerMessage(e) {
             onClick={() => {
   setActiveTab(tab.key);
 
-  if (tab.key === "specialists") {
-    setSpecialistsTab("list");
-  }
 }}
             className={`px-5 py-3 rounded-2xl font-medium transition ${
               activeTab === tab.key

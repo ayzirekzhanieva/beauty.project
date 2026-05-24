@@ -1032,9 +1032,17 @@ async function sendOwnerMessage(e) {
 </label>
 
         <div className="flex gap-2">
-          <Button onClick={() => saveSalonEdit(salon.id)}>
-            Сохранить
-          </Button>
+          <button
+  type="button"
+  onClick={() => {
+    console.log("SAVE CLICKED");
+    console.log("IMAGE BEFORE SAVE:", editSalonForm.image);
+    saveSalonEdit(salon.id);
+  }}
+  className="rounded-2xl bg-[#ee8585] px-5 py-3 text-white"
+>
+  Сохранить
+</button>
           <Button
             className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
             onClick={() => setEditingSalonId(null)}
@@ -1944,6 +1952,20 @@ async function sendOwnerMessage(e) {
             className="hidden"
             required
           />
+          <input
+  type="file"
+  accept="image/*"
+  onChange={(e) => {
+    const file = e.target.files?.[0] || null;
+
+    alert(file ? file.name : "Файл не выбран");
+
+    setEditSalonForm((prev) => ({
+      ...prev,
+      image: file,
+    }));
+  }}
+/>
         </label>
 
         {formWork.image && (

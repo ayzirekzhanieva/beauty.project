@@ -1015,8 +1015,8 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setEditSalonForm({
-    ...editSalonForm,
+  setFormWork({
+    ...formWork,
     image: e.target.files?.[0] || null,
   })
 }
@@ -1489,8 +1489,8 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setEditSalonForm({
-    ...editSalonForm,
+  setFormWork({
+    ...formWork,
     image: e.target.files?.[0] || null,
   })
 }

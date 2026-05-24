@@ -279,6 +279,7 @@ const navigate = useNavigate();
   }
 
   async function saveSalonEdit(salonId) {
+    console.log("EDIT SALON IMAGE:", editSalonForm.image);
     try {
       const formData = new FormData();
       formData.append("name", editSalonForm.name);

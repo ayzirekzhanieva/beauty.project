@@ -1015,10 +1015,10 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setEditSalonForm({
-    ...editSalonForm,
-    image: e.target.files?.[0] || null,
-  })
+  setFormSalon({
+  ...formSalon,
+  image: e.target.files?.[0] || null,
+})
 }
     className="hidden"
   />
@@ -1048,7 +1048,7 @@ async function sendOwnerMessage(e) {
         <div className="grid md:grid-cols-[280px_1fr] gap-6 items-start">
   {salon.imageUrl && (
     <img
-      src={`http://localhost:5000${salon.imageUrl}`}
+      src={`https://beauty-studio-backend-uuve.onrender.com${salon.imageUrl}`}
       alt={salon.name}
       className="w-full h-56 object-cover rounded-3xl border border-[#fdeae5]"
     />
@@ -1489,10 +1489,10 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setEditSalonForm({
-    ...editSalonForm,
-    image: e.target.files?.[0] || null,
-  })
+  setFormWork({
+  ...formWork,
+  image: e.target.files?.[0] || null,
+})
 }
     className="hidden"
   />
@@ -1944,7 +1944,7 @@ async function sendOwnerMessage(e) {
           />
         </label>
 
-        {editSalonForm.image && (
+        {formWork.image && (
   <p className="text-sm text-gray-500 mt-2">
     Выбрано: {editSalonForm.image.name}
   </p>

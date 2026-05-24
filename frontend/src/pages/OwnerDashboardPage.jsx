@@ -180,9 +180,9 @@ const navigate = useNavigate();
       formData.append("description", formSalon.description);
       formData.append("address", formSalon.address);
 
-      if (formSalon.image) {
-        formData.append("image", formSalon.image);
-      }
+      if (editSalonForm.image) {
+  formData.append("image", editSalonForm.image);
+}
 
       await api.post("/owner/salons", formData, {
         headers: {
@@ -286,8 +286,8 @@ const navigate = useNavigate();
       formData.append("address", editSalonForm.address);
 
       if (editSalonForm.image) {
-        formData.append("image", editSalonForm.image);
-      }
+  formData.append("image", editSalonForm.image);
+}
 
       await api.patch(`/owner/salons/${salonId}`, formData, {
         headers: {

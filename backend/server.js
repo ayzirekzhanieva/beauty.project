@@ -19,7 +19,7 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://localhost:5173",
-    "https://beauty-project.vercel.app",
+    "https://beauty-project-inky.vercel.app",
   ],
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],

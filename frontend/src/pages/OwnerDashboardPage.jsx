@@ -180,9 +180,9 @@ const navigate = useNavigate();
       formData.append("description", formSalon.description);
       formData.append("address", formSalon.address);
 
-      if (editSalonForm.image) {
-  formData.append("image", editSalonForm.image);
-}
+      if (formSalon.image) {
+        formData.append("image", formSalon.image);
+      }
 
       await api.post("/owner/salons", formData, {
         headers: {
@@ -279,7 +279,6 @@ const navigate = useNavigate();
   }
 
   async function saveSalonEdit(salonId) {
-    console.log("EDIT SALON IMAGE:", editSalonForm.image);
     try {
       const formData = new FormData();
       formData.append("name", editSalonForm.name);
@@ -287,8 +286,8 @@ const navigate = useNavigate();
       formData.append("address", editSalonForm.address);
 
       if (editSalonForm.image) {
-  formData.append("image", editSalonForm.image);
-}
+        formData.append("image", editSalonForm.image);
+      }
 
       await api.patch(`/owner/salons/${salonId}`, formData, {
         headers: {
@@ -298,8 +297,7 @@ const navigate = useNavigate();
 
       toast.success("Салон обновлен");
       setEditingSalonId(null);
-      await loadOwnerSalons();
-      await loadDashboard();
+      loadOwnerSalons();
     } catch (error) {
       toast.error(error.response?.data?.message || "Ошибка обновления салона");
     }
@@ -1017,32 +1015,24 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setFormSalon({
-  ...formSalon,
-  image: e.target.files?.[0] || null,
-})
+  setEditSalonForm({
+    ...editSalonForm,
+    image: e.target.files?.[0] || null,
+  })
 }
     className="hidden"
   />
-  {editSalonForm.image && (
+  {formWork.image && (
   <p className="text-sm text-gray-500 mt-2">
-    Выбрано: {editSalonForm.image.name}
+    Выбрано: {formWork.image.name}
   </p>
 )}
 </label>
 
         <div className="flex gap-2">
-          <button
-  type="button"
-  onClick={() => {
-    console.log("SAVE CLICKED");
-    console.log("IMAGE BEFORE SAVE:", editSalonForm.image);
-    saveSalonEdit(salon.id);
-  }}
-  className="rounded-2xl bg-[#ee8585] px-5 py-3 text-white"
->
-  Сохранить
-</button>
+          <Button onClick={() => saveSalonEdit(salon.id)}>
+            Сохранить
+          </Button>
           <Button
             className="bg-white text-[#ee8585] border border-pink-300 hover:bg-[#fff7f5]"
             onClick={() => setEditingSalonId(null)}
@@ -1058,7 +1048,7 @@ async function sendOwnerMessage(e) {
         <div className="grid md:grid-cols-[280px_1fr] gap-6 items-start">
   {salon.imageUrl && (
     <img
-      src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${salon.imageUrl}?v=${Date.now()}`}
+      src={`http://localhost:5000${salon.imageUrl}`}
       alt={salon.name}
       className="w-full h-56 object-cover rounded-3xl border border-[#fdeae5]"
     />
@@ -1499,10 +1489,10 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setFormWork({
-  ...formWork,
-  image: e.target.files?.[0] || null,
-})
+  setEditSalonForm({
+    ...editSalonForm,
+    image: e.target.files?.[0] || null,
+  })
 }
     className="hidden"
   />
@@ -1944,35 +1934,21 @@ async function sendOwnerMessage(e) {
             type="file"
             accept="image/*"
             onChange={(e) =>
-  setEditSalonForm({
-    ...editSalonForm,
-    image: e.target.files?.[0] || null,
-  })
-}
+              setFormWork({
+                ...formWork,
+                image: e.target.files?.[0] || null,
+              })
+            }
             className="hidden"
             required
           />
-          <input
-  type="file"
-  accept="image/*"
-  onChange={(e) => {
-    const file = e.target.files?.[0] || null;
-
-    alert(file ? file.name : "Файл не выбран");
-
-    setEditSalonForm((prev) => ({
-      ...prev,
-      image: file,
-    }));
-  }}
-/>
         </label>
 
         {formWork.image && (
-  <p className="text-sm text-gray-500 mt-2">
-    Выбрано: {editSalonForm.image.name}
-  </p>
-)}
+          <p className="text-sm text-gray-500">
+            Выбрано: {formWork.image.name}
+          </p>
+        )}
 
         <textarea
           name="caption"
@@ -2030,6 +2006,9 @@ async function sendOwnerMessage(e) {
             onClick={() => {
   setActiveTab(tab.key);
 
+  if (tab.key === "specialists") {
+    setSpecialistsTab("list");
+  }
 }}
             className={`px-5 py-3 rounded-2xl font-medium transition ${
               activeTab === tab.key

@@ -1015,16 +1015,16 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setFormWork({
-    ...formWork,
+  setEditSalonForm({
+    ...editSalonForm,
     image: e.target.files?.[0] || null,
   })
 }
     className="hidden"
   />
-  {formWork.image && (
+  {editSalonForm.image && (
   <p className="text-sm text-gray-500 mt-2">
-    Выбрано: {formWork.image.name}
+    Выбрано: {editSalonForm.image.name}
   </p>
 )}
 </label>
@@ -1489,8 +1489,8 @@ async function sendOwnerMessage(e) {
     type="file"
     accept="image/*"
     onChange={(e) =>
-  setFormWork({
-    ...formWork,
+  setEditSalonForm({
+    ...editSalonForm,
     image: e.target.files?.[0] || null,
   })
 }
@@ -1934,21 +1934,21 @@ async function sendOwnerMessage(e) {
             type="file"
             accept="image/*"
             onChange={(e) =>
-              setFormWork({
-                ...formWork,
-                image: e.target.files?.[0] || null,
-              })
-            }
+  setEditSalonForm({
+    ...editSalonForm,
+    image: e.target.files?.[0] || null,
+  })
+}
             className="hidden"
             required
           />
         </label>
 
-        {formWork.image && (
-          <p className="text-sm text-gray-500">
-            Выбрано: {formWork.image.name}
-          </p>
-        )}
+        {editSalonForm.image && (
+  <p className="text-sm text-gray-500 mt-2">
+    Выбрано: {editSalonForm.image.name}
+  </p>
+)}
 
         <textarea
           name="caption"

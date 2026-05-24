@@ -297,7 +297,8 @@ const navigate = useNavigate();
 
       toast.success("Салон обновлен");
       setEditingSalonId(null);
-      loadOwnerSalons();
+      await loadOwnerSalons();
+      await loadDashboard();
     } catch (error) {
       toast.error(error.response?.data?.message || "Ошибка обновления салона");
     }
@@ -1048,7 +1049,7 @@ async function sendOwnerMessage(e) {
         <div className="grid md:grid-cols-[280px_1fr] gap-6 items-start">
   {salon.imageUrl && (
     <img
-      src={`https://beauty-studio-backend-uuve.onrender.com${salon.imageUrl}`}
+      src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${salon.imageUrl}?v=${Date.now()}`}
       alt={salon.name}
       className="w-full h-56 object-cover rounded-3xl border border-[#fdeae5]"
     />
